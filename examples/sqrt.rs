@@ -2,7 +2,6 @@
 
 use async_flow::{
     io::Result,
-    stdio::{stdin, stdout},
     tokio::{Input, Output, System},
 };
 
@@ -13,9 +12,10 @@ async fn main() {
     let (sqrt_out, output) = async_flow::tokio::bounded(1);
 
     let mut system = System::new();
-    system.spawn(stdin::<f64>(input));
+    let _ = system.stdin::<f64>(input);
     system.spawn(sqrt(sqrt_in, sqrt_out));
-    system.spawn(stdout::<f64>(output));
+    let _ = system.stdout::<f64>(output);
+
     system.execute().await
 }
 
