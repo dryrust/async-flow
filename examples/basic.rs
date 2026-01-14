@@ -10,7 +10,7 @@ async fn main() {
         output.send("value2").await.unwrap();
     });
 
-    while let Some(message) = input.recv().await {
+    while let Some(message) = input.recv().await.unwrap() {
         eprintln!("recv: {}", message);
     }
 }

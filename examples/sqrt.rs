@@ -17,13 +17,13 @@ async fn main() {
 
     tokio::spawn(sqrt(sqrt_in, sqrt_out));
 
-    while let Some(result) = output.recv().await {
+    while let Some(result) = output.recv().await.unwrap() {
         println!("{}", result);
     }
 }
 
 async fn sqrt(mut input: Input<f64>, output: Output<f64>) -> Result<(), f64> {
-    while let Some(value) = input.recv().await {
+    while let Some(value) = input.recv().await? {
         output.send(value.sqrt()).await?;
     }
     Ok(())

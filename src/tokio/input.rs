@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::io::RecvError;
 use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Receiver;
@@ -37,8 +38,8 @@ impl<T> Input<T> {
         Some(self.receiver.max_capacity())
     }
 
-    pub async fn recv(&mut self) -> Option<T> {
-        self.receiver.recv().await
+    pub async fn recv(&mut self) -> Result<Option<T>, RecvError> {
+        Ok(self.receiver.recv().await)
     }
 }
 
@@ -66,7 +67,7 @@ impl<T: Send> crate::io::InputPort<T> for Input<T> {
         self.receiver.is_empty()
     }
 
-    async fn recv(&mut self) -> Option<T> {
+    async fn recv(&mut self) -> Result<Option<T>, RecvError> {
         self.recv().await
     }
 }
