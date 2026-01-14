@@ -1,24 +1,24 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{OutputPort, Port};
+use crate::io::SendError;
 use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
-use tokio::sync::mpsc::{Sender, error::SendError};
+use tokio::sync::mpsc::Sender;
 
 #[derive(Clone)]
-pub struct BoundedOutputPort<T> {
+pub struct Output<T> {
     pub sender: Sender<T>,
 }
 
-impl<T> core::fmt::Debug for BoundedOutputPort<T> {
+impl<T> core::fmt::Debug for Output<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("BoundedOutputPort")
+        f.debug_struct("OutputPort")
             .field("sender", &self.sender)
             .finish()
     }
 }
 
-impl<T> BoundedOutputPort<T> {
+impl<T> Output<T> {
     pub(crate) fn as_sender(&self) -> &Sender<T> {
         &self.sender
     }
@@ -40,25 +40,25 @@ impl<T> BoundedOutputPort<T> {
     }
 }
 
-impl<T> AsRef<Sender<T>> for BoundedOutputPort<T> {
+impl<T> AsRef<Sender<T>> for Output<T> {
     fn as_ref(&self) -> &Sender<T> {
         &self.sender
     }
 }
 
-impl<T> AsMut<Sender<T>> for BoundedOutputPort<T> {
+impl<T> AsMut<Sender<T>> for Output<T> {
     fn as_mut(&mut self) -> &mut Sender<T> {
         &mut self.sender
     }
 }
 
-impl<T> From<Sender<T>> for BoundedOutputPort<T> {
+impl<T> From<Sender<T>> for Output<T> {
     fn from(input: Sender<T>) -> Self {
         Self { sender: input }
     }
 }
 
-impl<T> From<&Sender<T>> for BoundedOutputPort<T> {
+impl<T> From<&Sender<T>> for Output<T> {
     fn from(input: &Sender<T>) -> Self {
         Self {
             sender: input.clone(),
@@ -67,13 +67,13 @@ impl<T> From<&Sender<T>> for BoundedOutputPort<T> {
 }
 
 #[async_trait::async_trait]
-impl<T: Send + 'static> OutputPort<T> for BoundedOutputPort<T> {
+impl<T: Send + 'static> crate::io::OutputPort<T> for Output<T> {
     async fn send(&self, value: T) -> Result<(), SendError<T>> {
         self.send(value).await
     }
 }
 
-impl<T> Port<T> for BoundedOutputPort<T> {
+impl<T> crate::io::Port<T> for Output<T> {
     fn is_closed(&self) -> bool {
         self.sender.is_closed()
     }
@@ -83,13 +83,13 @@ impl<T> Port<T> for BoundedOutputPort<T> {
     }
 }
 
-impl<T> MaybeLabeled for BoundedOutputPort<T> {
+impl<T> MaybeLabeled for Output<T> {
     fn label(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
 
-impl<T> MaybeNamed for BoundedOutputPort<T> {
+impl<T> MaybeNamed for Output<T> {
     fn name(&self) -> Option<Cow<'_, str>> {
         None
     }

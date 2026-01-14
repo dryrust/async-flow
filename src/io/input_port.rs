@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::Port;
+use crate::io::Port;
 use alloc::boxed::Box;
 
 #[async_trait::async_trait]

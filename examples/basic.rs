@@ -1,8 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
+/// cargo run --example basic
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let (output, mut input) = async_flow::bounded_boxed(1);
+    let (output, mut input) = async_flow::tokio::bounded_boxed(1);
 
     tokio::spawn(async move {
         output.send("value1").await.unwrap();
