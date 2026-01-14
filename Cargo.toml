@@ -23,5 +23,6 @@ std = []
 unstable = []
 
 [dependencies]
+dogma = { version = "0.1", default-features = false, features = ["traits"] }
 tokio = { version = "1.49", default-features = false, features = ["rt", "sync", "macros"] }
 tokio-stream = { version = "0.1", default-features = false }
