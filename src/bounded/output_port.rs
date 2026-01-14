@@ -23,8 +23,32 @@ impl<T> BoundedOutputPort<T> {
         &self.sender
     }
 
+    pub(crate) fn into_sender(self) -> Sender<T> {
+        self.sender
+    }
+
+    pub fn capacity(&self) -> Option<usize> {
+        Some(self.sender.capacity())
+    }
+
+    pub fn max_capacity(&self) -> Option<usize> {
+        Some(self.sender.max_capacity())
+    }
+
     pub async fn send(&self, value: T) -> Result<(), SendError<T>> {
         self.sender.send(value).await
+    }
+}
+
+impl<T> AsRef<Sender<T>> for BoundedOutputPort<T> {
+    fn as_ref(&self) -> &Sender<T> {
+        &self.sender
+    }
+}
+
+impl<T> AsMut<Sender<T>> for BoundedOutputPort<T> {
+    fn as_mut(&mut self) -> &mut Sender<T> {
+        &mut self.sender
     }
 }
 
@@ -49,7 +73,15 @@ impl<T: Send + 'static> OutputPort<T> for BoundedOutputPort<T> {
     }
 }
 
-impl<T> Port<T> for BoundedOutputPort<T> {}
+impl<T> Port<T> for BoundedOutputPort<T> {
+    fn is_closed(&self) -> bool {
+        self.sender.is_closed()
+    }
+
+    fn close(&mut self) {
+        // TODO
+    }
+}
 
 impl<T> MaybeLabeled for BoundedOutputPort<T> {
     fn label(&self) -> Option<Cow<'_, str>> {

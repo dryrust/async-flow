@@ -6,4 +6,6 @@ use tokio::sync::mpsc::error::SendError;
 #[async_trait::async_trait]
 pub trait OutputPort<T: Send + 'static> {
     async fn send(&self, value: T) -> Result<(), SendError<T>>;
+
+    // TODO: try_send
 }

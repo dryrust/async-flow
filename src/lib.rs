@@ -23,3 +23,9 @@ pub use output_port::*;
 
 mod port;
 pub use port::*;
+
+mod recv_error;
+pub use recv_error::*;
+
+mod send_error;
+pub use send_error::*;
