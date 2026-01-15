@@ -9,7 +9,7 @@ use core::str::FromStr;
 use tokio::task::{AbortHandle, JoinSet};
 
 pub struct System {
-    pub blocks: JoinSet<Result>,
+    pub(crate) blocks: JoinSet<Result>,
 }
 
 impl System {

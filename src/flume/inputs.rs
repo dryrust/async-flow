@@ -3,8 +3,9 @@
 use crate::io::RecvError;
 use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
-use tokio::sync::mpsc::Receiver;
+use flume::Receiver;
 
+#[derive(Clone)]
 pub struct Inputs<T> {
     pub(crate) rx: Receiver<T>,
 }
@@ -21,15 +22,19 @@ impl<T> Inputs<T> {
     }
 
     pub fn capacity(&self) -> Option<usize> {
-        Some(self.rx.capacity())
+        self.max_capacity().map(|max| max - self.rx.len())
     }
 
     pub fn max_capacity(&self) -> Option<usize> {
-        Some(self.rx.max_capacity())
+        self.rx.capacity()
     }
 
     pub async fn recv(&mut self) -> Result<Option<T>, RecvError> {
-        Ok(self.rx.recv().await)
+        match self.rx.recv_async().await {
+            Ok(value) => Ok(Some(value)),
+            Err(flume::RecvError::Disconnected) => Ok(None),
+            Err(_) => unreachable!(),
+        }
     }
 }
 
@@ -51,6 +56,12 @@ impl<T> From<Receiver<T>> for Inputs<T> {
     }
 }
 
+impl<T> From<&Receiver<T>> for Inputs<T> {
+    fn from(input: &Receiver<T>) -> Self {
+        Self { rx: input.clone() }
+    }
+}
+
 #[async_trait::async_trait]
 impl<T: Send> crate::io::InputPort<T> for Inputs<T> {
     fn is_empty(&self) -> bool {
@@ -64,11 +75,11 @@ impl<T: Send> crate::io::InputPort<T> for Inputs<T> {
 
 impl<T> crate::io::Port<T> for Inputs<T> {
     fn is_closed(&self) -> bool {
-        self.rx.is_closed()
+        self.rx.is_disconnected()
     }
 
     fn close(&mut self) {
-        self.rx.close()
+        // TODO
     }
 }
 

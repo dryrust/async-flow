@@ -7,6 +7,13 @@ use thiserror::Error;
 #[error("SendError")]
 pub struct SendError;
 
+#[cfg(feature = "flume")]
+impl<T> From<flume::SendError<T>> for SendError {
+    fn from(input: flume::SendError<T>) -> Self {
+        Self // TODO
+    }
+}
+
 #[cfg(feature = "tokio")]
 impl<T> From<tokio::sync::mpsc::error::SendError<T>> for SendError {
     fn from(input: tokio::sync::mpsc::error::SendError<T>) -> Self {
@@ -17,6 +24,13 @@ impl<T> From<tokio::sync::mpsc::error::SendError<T>> for SendError {
 #[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
 #[error("TrySendError")]
 pub struct TrySendError;
+
+#[cfg(feature = "flume")]
+impl<T> From<flume::TrySendError<T>> for TrySendError {
+    fn from(input: flume::TrySendError<T>) -> Self {
+        Self // TODO
+    }
+}
 
 #[cfg(feature = "tokio")]
 impl<T> From<tokio::sync::mpsc::error::TrySendError<T>> for TrySendError {

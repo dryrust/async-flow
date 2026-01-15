@@ -12,6 +12,9 @@ pub use output_port::*;
 mod port;
 pub use port::*;
 
+mod port_state;
+pub use port_state::*;
+
 mod recv_error;
 pub use recv_error::*;
 

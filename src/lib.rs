@@ -11,14 +11,17 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-#[doc = include_str!("../README.md")]
-#[cfg(doctest)]
-pub struct ReadmeDoctests;
-
 pub mod io;
+
+#[cfg(feature = "flume")]
+pub mod flume;
 
 #[cfg(feature = "std")]
 pub mod stdio;
 
 #[cfg(feature = "tokio")]
 pub mod tokio;
+
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;

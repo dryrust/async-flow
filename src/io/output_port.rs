@@ -8,5 +8,7 @@ pub trait OutputPort<T: Send + 'static> {
     async fn send(&self, value: T) -> Result<(), SendError>;
 
     // TODO: send_event
+    // TODO: send_deadline
+    // TODO: send_timeout
     // TODO: try_send
 }

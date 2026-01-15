@@ -11,5 +11,8 @@ pub trait InputPort<T>: Port<T> {
     async fn recv(&mut self) -> Result<Option<T>, RecvError>;
 
     // TODO: recv_event
+    // TODO: recv_deadline
+    // TODO: recv_timeout
     // TODO: try_recv
+    // TODO: into_stream
 }

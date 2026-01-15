@@ -3,7 +3,7 @@
 use crate::io::SendError;
 use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
-use tokio::sync::mpsc::Sender;
+use flume::Sender;
 
 #[derive(Clone)]
 pub struct Outputs<T> {
@@ -22,15 +22,15 @@ impl<T> Outputs<T> {
     }
 
     pub fn capacity(&self) -> Option<usize> {
-        Some(self.tx.capacity())
+        self.max_capacity().map(|max| max - self.tx.len())
     }
 
     pub fn max_capacity(&self) -> Option<usize> {
-        Some(self.tx.max_capacity())
+        self.tx.capacity()
     }
 
     pub async fn send(&self, value: T) -> Result<(), SendError> {
-        Ok(self.tx.send(value).await?)
+        Ok(self.tx.send_async(value).await?)
     }
 }
 
@@ -67,11 +67,11 @@ impl<T: Send + 'static> crate::io::OutputPort<T> for Outputs<T> {
 
 impl<T> crate::io::Port<T> for Outputs<T> {
     fn is_closed(&self) -> bool {
-        self.tx.is_closed()
+        self.tx.is_disconnected()
     }
 
     fn close(&mut self) {
-        // TODO
+        drop(self.tx.downgrade())
     }
 }
 
