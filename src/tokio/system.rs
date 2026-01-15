@@ -2,7 +2,7 @@
 
 use crate::{
     io::Result,
-    tokio::{Input, Output},
+    tokio::{Inputs, Outputs},
 };
 use alloc::{string::ToString, vec::Vec};
 use core::str::FromStr;
@@ -31,7 +31,7 @@ impl System {
         self.blocks.join_all().await;
     }
 
-    pub fn stdin<T: FromStr>(&mut self) -> Input<T>
+    pub fn stdin<T: FromStr>(&mut self) -> Inputs<T>
     where
         T: Send + 'static,
         <T as FromStr>::Err: Send,
@@ -42,7 +42,7 @@ impl System {
         input
     }
 
-    pub fn stdout<T: ToString>(&mut self) -> Output<T>
+    pub fn stdout<T: ToString>(&mut self) -> Outputs<T>
     where
         T: Send + 'static,
     {

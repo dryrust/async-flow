@@ -5,7 +5,7 @@ use alloc::string::String;
 use core::str::FromStr;
 
 #[cfg(feature = "tokio")]
-pub async fn stdin<T: FromStr>(output: crate::tokio::Output<T>) -> Result {
+pub async fn stdin<T: FromStr>(outputs: crate::tokio::Outputs<T>) -> Result {
     use tokio::io::{AsyncBufRead, AsyncBufReadExt, BufReader};
 
     let input = tokio::io::stdin();
@@ -14,7 +14,7 @@ pub async fn stdin<T: FromStr>(output: crate::tokio::Output<T>) -> Result {
 
     while let Some(line) = lines.next_line().await? {
         if let Ok(value) = line.parse() {
-            output.send(value).await?;
+            outputs.send(value).await?;
         }
     }
 

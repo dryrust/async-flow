@@ -4,9 +4,9 @@ use crate::io::Result;
 use alloc::string::{String, ToString};
 
 #[cfg(feature = "tokio")]
-pub async fn stdout<T: ToString>(mut input: crate::tokio::Input<T>) -> Result {
-    while let Some(value) = input.recv().await? {
-        std::println!("{}", value.to_string());
+pub async fn stdout<T: ToString>(mut inputs: crate::tokio::Inputs<T>) -> Result {
+    while let Some(input) = inputs.recv().await? {
+        std::println!("{}", input.to_string());
     }
 
     Ok(())

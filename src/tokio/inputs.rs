@@ -5,11 +5,11 @@ use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Receiver;
 
-pub struct Input<T> {
+pub struct Inputs<T> {
     pub receiver: Receiver<T>,
 }
 
-impl<T> core::fmt::Debug for Input<T> {
+impl<T> core::fmt::Debug for Inputs<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("InputPort")
             .field("receiver", &self.receiver)
@@ -17,7 +17,7 @@ impl<T> core::fmt::Debug for Input<T> {
     }
 }
 
-impl<T> Input<T> {
+impl<T> Inputs<T> {
     pub(crate) fn as_receiver(&self) -> &Receiver<T> {
         &self.receiver
     }
@@ -43,26 +43,26 @@ impl<T> Input<T> {
     }
 }
 
-impl<T> AsRef<Receiver<T>> for Input<T> {
+impl<T> AsRef<Receiver<T>> for Inputs<T> {
     fn as_ref(&self) -> &Receiver<T> {
         &self.receiver
     }
 }
 
-impl<T> AsMut<Receiver<T>> for Input<T> {
+impl<T> AsMut<Receiver<T>> for Inputs<T> {
     fn as_mut(&mut self) -> &mut Receiver<T> {
         &mut self.receiver
     }
 }
 
-impl<T> From<Receiver<T>> for Input<T> {
+impl<T> From<Receiver<T>> for Inputs<T> {
     fn from(input: Receiver<T>) -> Self {
         Self { receiver: input }
     }
 }
 
 #[async_trait::async_trait]
-impl<T: Send> crate::io::InputPort<T> for Input<T> {
+impl<T: Send> crate::io::InputPort<T> for Inputs<T> {
     fn is_empty(&self) -> bool {
         self.receiver.is_empty()
     }
@@ -72,7 +72,7 @@ impl<T: Send> crate::io::InputPort<T> for Input<T> {
     }
 }
 
-impl<T> crate::io::Port<T> for Input<T> {
+impl<T> crate::io::Port<T> for Inputs<T> {
     fn is_closed(&self) -> bool {
         self.receiver.is_closed()
     }
@@ -82,13 +82,13 @@ impl<T> crate::io::Port<T> for Input<T> {
     }
 }
 
-impl<T> MaybeLabeled for Input<T> {
+impl<T> MaybeLabeled for Inputs<T> {
     fn label(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
 
-impl<T> MaybeNamed for Input<T> {
+impl<T> MaybeNamed for Inputs<T> {
     fn name(&self) -> Option<Cow<'_, str>> {
         None
     }

@@ -2,7 +2,7 @@
 
 use async_flow::{
     io::Result,
-    tokio::{Input, Output, System},
+    tokio::{Inputs, Outputs, System},
 };
 
 /// cargo run --example sqrt
@@ -15,7 +15,7 @@ async fn main() {
     system.execute().await
 }
 
-async fn sqrt(mut inputs: Input<f64>, outputs: Output<f64>) -> Result {
+async fn sqrt(mut inputs: Inputs<f64>, outputs: Outputs<f64>) -> Result {
     while let Some(input) = inputs.recv().await? {
         let output = input.sqrt();
         outputs.send(output).await?;

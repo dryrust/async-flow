@@ -2,11 +2,11 @@
 
 use alloc::boxed::Box;
 
-pub fn bounded<T>(buffer: usize) -> (Output<T>, Input<T>) {
+pub fn bounded<T>(buffer: usize) -> (Outputs<T>, Inputs<T>) {
     let (tx, rx) = tokio::sync::mpsc::channel(buffer);
-    let output = Output::from(tx);
-    let input = Input::from(rx);
-    (output, input)
+    let outputs = Outputs::from(tx);
+    let inputs = Inputs::from(rx);
+    (outputs, inputs)
 }
 
 pub fn bounded_boxed<T>(
@@ -18,15 +18,15 @@ pub fn bounded_boxed<T>(
 where
     T: Send + Sync + 'static,
 {
-    let (output, input) = bounded(buffer);
-    (Box::new(output), Box::new(input))
+    let (outputs, inputs) = bounded(buffer);
+    (Box::new(outputs), Box::new(inputs))
 }
 
-mod input;
-pub use input::*;
+mod inputs;
+pub use inputs::*;
 
-mod output;
-pub use output::*;
+mod outputs;
+pub use outputs::*;
 
 mod system;
 pub use system::*;

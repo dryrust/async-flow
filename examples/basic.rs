@@ -3,14 +3,14 @@
 /// cargo run --example basic
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let (output, mut input) = async_flow::tokio::bounded_boxed(1);
+    let (outputs, mut inputs) = async_flow::tokio::bounded_boxed(1);
 
     tokio::spawn(async move {
-        output.send("value1").await.unwrap();
-        output.send("value2").await.unwrap();
+        outputs.send("value1").await.unwrap();
+        outputs.send("value2").await.unwrap();
     });
 
-    while let Some(message) = input.recv().await.unwrap() {
+    while let Some(message) = inputs.recv().await.unwrap() {
         eprintln!("recv: {}", message);
     }
 }
