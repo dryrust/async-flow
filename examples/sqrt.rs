@@ -7,12 +7,13 @@ use async_flow::{
 
 /// cargo run --example sqrt
 #[tokio::main(flavor = "current_thread")]
-async fn main() {
-    let mut system = System::new();
-    let sqrt_in = system.stdin::<f64>();
-    let sqrt_out = system.stdout::<f64>();
-    system.spawn(sqrt(sqrt_in, sqrt_out));
-    system.execute().await
+pub async fn main() -> Result {
+    System::run(|system| {
+        let stdin = system.stdin::<f64>();
+        let stdout = system.stdout::<f64>();
+        system.spawn(sqrt(stdin, stdout));
+    })
+    .await
 }
 
 async fn sqrt(mut inputs: Inputs<f64>, outputs: Outputs<f64>) -> Result {

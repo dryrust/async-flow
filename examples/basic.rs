@@ -2,7 +2,7 @@
 
 /// cargo run --example basic
 #[tokio::main(flavor = "current_thread")]
-async fn main() {
+pub async fn main() {
     let (outputs, mut inputs) = async_flow::flume::bounded(1);
 
     tokio::spawn(async move {
