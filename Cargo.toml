@@ -6,13 +6,13 @@ version = "0.0.0"
 authors = ["Arto Bendiken"]
 edition = "2024"
 #rust-version = "1.85"
-description = "Async flow traits."
+description = "Async abstractions for flow-based programming (FBP)."
 #documentation = "https://docs.rs/async-flow"
 readme = true
 homepage = "https://github.com/dryrust/async-flow"
 repository = "https://github.com/dryrust/async-flow"
 license = "Unlicense"
-keywords = []
+keywords = ["fbp", "flow", "dataflow", "async"]
 categories = []
 publish = true
 
