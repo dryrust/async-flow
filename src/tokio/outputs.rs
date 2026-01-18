@@ -10,13 +10,13 @@ pub struct Outputs<T, const N: usize = 0> {
     pub(crate) tx: Option<Sender<T>>,
 }
 
-impl<T> core::fmt::Debug for Outputs<T> {
+impl<T, const N: usize> core::fmt::Debug for Outputs<T, N> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Outputs").field("tx", &self.tx).finish()
     }
 }
 
-impl<T> Outputs<T> {
+impl<T, const N: usize> Outputs<T, N> {
     pub fn is_open(&self) -> bool {
         !self.is_closed()
     }
@@ -54,25 +54,25 @@ impl<T> Outputs<T> {
     }
 }
 
-impl<T> AsRef<Sender<T>> for Outputs<T> {
+impl<T, const N: usize> AsRef<Sender<T>> for Outputs<T, N> {
     fn as_ref(&self) -> &Sender<T> {
         self.tx.as_ref().unwrap()
     }
 }
 
-impl<T> AsMut<Sender<T>> for Outputs<T> {
+impl<T, const N: usize> AsMut<Sender<T>> for Outputs<T, N> {
     fn as_mut(&mut self) -> &mut Sender<T> {
         self.tx.as_mut().unwrap()
     }
 }
 
-impl<T> From<Sender<T>> for Outputs<T> {
+impl<T, const N: usize> From<Sender<T>> for Outputs<T, N> {
     fn from(input: Sender<T>) -> Self {
         Self { tx: Some(input) }
     }
 }
 
-impl<T> From<&Sender<T>> for Outputs<T> {
+impl<T, const N: usize> From<&Sender<T>> for Outputs<T, N> {
     fn from(input: &Sender<T>) -> Self {
         Self {
             tx: Some(input.clone()),
@@ -81,13 +81,13 @@ impl<T> From<&Sender<T>> for Outputs<T> {
 }
 
 #[async_trait::async_trait]
-impl<T: Send + 'static> crate::io::OutputPort<T> for Outputs<T> {
+impl<T: Send + 'static, const N: usize> crate::io::OutputPort<T> for Outputs<T, N> {
     async fn send(&self, value: T) -> Result<(), SendError> {
         self.send(value).await
     }
 }
 
-impl<T> crate::io::Port<T> for Outputs<T> {
+impl<T, const N: usize> crate::io::Port<T> for Outputs<T, N> {
     fn is_closed(&self) -> bool {
         self.is_closed()
     }
@@ -97,13 +97,13 @@ impl<T> crate::io::Port<T> for Outputs<T> {
     }
 }
 
-impl<T> MaybeLabeled for Outputs<T> {
+impl<T, const N: usize> MaybeLabeled for Outputs<T, N> {
     fn label(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
 
-impl<T> MaybeNamed for Outputs<T> {
+impl<T, const N: usize> MaybeNamed for Outputs<T, N> {
     fn name(&self) -> Option<Cow<'_, str>> {
         None
     }

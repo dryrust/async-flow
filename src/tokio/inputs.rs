@@ -10,13 +10,13 @@ pub struct Inputs<T, const N: usize = 0> {
     pub(crate) rx: Option<Receiver<T>>,
 }
 
-impl<T> core::fmt::Debug for Inputs<T> {
+impl<T, const N: usize> core::fmt::Debug for Inputs<T, N> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Inputs").field("rx", &self.rx).finish()
     }
 }
 
-impl<T> Inputs<T> {
+impl<T, const N: usize> Inputs<T, N> {
     pub fn is_open(&self) -> bool {
         !self.is_closed()
     }
@@ -70,26 +70,26 @@ impl<T> Inputs<T> {
     }
 }
 
-impl<T> AsRef<Receiver<T>> for Inputs<T> {
+impl<T, const N: usize> AsRef<Receiver<T>> for Inputs<T, N> {
     fn as_ref(&self) -> &Receiver<T> {
         self.rx.as_ref().unwrap()
     }
 }
 
-impl<T> AsMut<Receiver<T>> for Inputs<T> {
+impl<T, const N: usize> AsMut<Receiver<T>> for Inputs<T, N> {
     fn as_mut(&mut self) -> &mut Receiver<T> {
         self.rx.as_mut().unwrap()
     }
 }
 
-impl<T> From<Receiver<T>> for Inputs<T> {
+impl<T, const N: usize> From<Receiver<T>> for Inputs<T, N> {
     fn from(input: Receiver<T>) -> Self {
         Self { rx: Some(input) }
     }
 }
 
 #[async_trait::async_trait]
-impl<T: Send> crate::io::InputPort<T> for Inputs<T> {
+impl<T: Send + 'static, const N: usize> crate::io::InputPort<T> for Inputs<T, N> {
     fn is_empty(&self) -> bool {
         self.is_empty()
     }
@@ -99,7 +99,7 @@ impl<T: Send> crate::io::InputPort<T> for Inputs<T> {
     }
 }
 
-impl<T> crate::io::Port<T> for Inputs<T> {
+impl<T, const N: usize> crate::io::Port<T> for Inputs<T, N> {
     fn is_closed(&self) -> bool {
         self.is_closed()
     }
@@ -109,13 +109,13 @@ impl<T> crate::io::Port<T> for Inputs<T> {
     }
 }
 
-impl<T> MaybeLabeled for Inputs<T> {
+impl<T, const N: usize> MaybeLabeled for Inputs<T, N> {
     fn label(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
 
-impl<T> MaybeNamed for Inputs<T> {
+impl<T, const N: usize> MaybeNamed for Inputs<T, N> {
     fn name(&self) -> Option<Cow<'_, str>> {
         None
     }
