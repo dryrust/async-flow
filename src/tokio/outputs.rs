@@ -106,7 +106,7 @@ impl<T: Send + 'static, const N: usize> crate::io::OutputPort<T> for Outputs<T, 
     }
 }
 
-impl<T, const N: usize> crate::io::Port<T> for Outputs<T, N> {
+impl<T: Send, const N: usize> crate::io::Port<T> for Outputs<T, N> {
     fn close(&mut self) {
         self.close()
     }
@@ -120,14 +120,14 @@ impl<T, const N: usize> crate::io::Port<T> for Outputs<T, N> {
     }
 }
 
-impl<T, const N: usize> MaybeLabeled for Outputs<T, N> {
-    fn label(&self) -> Option<Cow<'_, str>> {
+impl<T, const N: usize> MaybeNamed for Outputs<T, N> {
+    fn name(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
 
-impl<T, const N: usize> MaybeNamed for Outputs<T, N> {
-    fn name(&self) -> Option<Cow<'_, str>> {
+impl<T, const N: usize> MaybeLabeled for Outputs<T, N> {
+    fn label(&self) -> Option<Cow<'_, str>> {
         None
     }
 }

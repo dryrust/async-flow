@@ -2,13 +2,22 @@
 
 use crate::io::{Port, RecvError};
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 #[async_trait::async_trait]
-pub trait InputPort<T>: Port<T> {
+pub trait InputPort<T: Send>: Port<T> {
     /// Checks if this port is empty.
     fn is_empty(&self) -> bool;
 
     async fn recv(&mut self) -> Result<Option<T>, RecvError>;
+
+    async fn recv_all(&mut self) -> Result<Vec<T>, RecvError> {
+        let mut inputs = Vec::new();
+        while let Some(input) = self.recv().await? {
+            inputs.push(input);
+        }
+        Ok(inputs)
+    }
 
     // TODO: recv_event
     // TODO: recv_deadline

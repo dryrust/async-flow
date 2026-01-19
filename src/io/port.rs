@@ -6,7 +6,7 @@ use super::PortState;
 use dogma::{MaybeLabeled, MaybeNamed};
 
 /// The common interface for ports, whether for input or output.
-pub trait Port<T>: MaybeNamed + MaybeLabeled {
+pub trait Port<T: Send>: MaybeNamed + MaybeLabeled {
     /// Closes this port without dropping it, returning immediately.
     ///
     /// If the port had an open connection, it will be disconnected.
@@ -56,7 +56,7 @@ pub trait Port<T>: MaybeNamed + MaybeLabeled {
     }
 }
 
-impl<T> core::fmt::Debug for &dyn Port<T> {
+impl<T: Send> core::fmt::Debug for &dyn Port<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         f.debug_struct("Port")
             .field("name", &self.name())
