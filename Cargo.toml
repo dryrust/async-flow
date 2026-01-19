@@ -24,6 +24,7 @@ unstable = []
 
 # Integrations:
 flume = ["dep:flume"]
+serde = []
 stream = ["dep:tokio-stream"]
 tokio = ["dep:tokio"]
 

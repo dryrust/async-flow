@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::io::RecvError;
+use crate::{PortDirection, PortState, io::RecvError};
 use alloc::{borrow::Cow, boxed::Box, vec::Vec};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Receiver;
@@ -17,12 +17,39 @@ impl<T, const N: usize> core::fmt::Debug for Inputs<T, N> {
 }
 
 impl<T, const N: usize> Inputs<T, N> {
-    pub fn is_open(&self) -> bool {
-        !self.is_closed()
+    pub fn close(&mut self) {
+        if let Some(rx) = self.rx.as_mut() {
+            if !rx.is_closed() {
+                rx.close() // idempotent
+            }
+        }
     }
 
+    pub fn direction(&self) -> PortDirection {
+        PortDirection::Input
+    }
+
+    pub fn state(&self) -> PortState {
+        if self.rx.as_ref().map(|rx| rx.is_closed()).unwrap_or(true) {
+            PortState::Closed
+        } else {
+            PortState::Open
+        }
+    }
+
+    /// Checks whether this port is currently closed.
     pub fn is_closed(&self) -> bool {
-        self.rx.as_ref().map(|rx| rx.is_closed()).unwrap_or(true)
+        self.state().is_closed()
+    }
+
+    /// Checks whether this port is currently open.
+    pub fn is_open(&self) -> bool {
+        self.state().is_open()
+    }
+
+    /// Checks whether this port is currently connected.
+    pub fn is_connected(&self) -> bool {
+        self.state().is_connected()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -35,14 +62,6 @@ impl<T, const N: usize> Inputs<T, N> {
 
     pub fn max_capacity(&self) -> Option<usize> {
         self.rx.as_ref().map(|rx| rx.max_capacity())
-    }
-
-    pub fn close(&mut self) {
-        if let Some(rx) = self.rx.as_mut() {
-            if !rx.is_closed() {
-                rx.close() // idempotent
-            }
-        }
     }
 
     pub async fn recv_all(&mut self) -> Result<Vec<T>, RecvError> {
@@ -100,12 +119,16 @@ impl<T: Send + 'static, const N: usize> crate::io::InputPort<T> for Inputs<T, N>
 }
 
 impl<T, const N: usize> crate::io::Port<T> for Inputs<T, N> {
-    fn is_closed(&self) -> bool {
-        self.is_closed()
-    }
-
     fn close(&mut self) {
         self.close()
+    }
+
+    fn direction(&self) -> PortDirection {
+        self.direction()
+    }
+
+    fn state(&self) -> PortState {
+        self.state()
     }
 }
 

@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::io::SendError;
+use crate::{PortDirection, PortState, io::SendError};
 use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Sender;
@@ -17,12 +17,35 @@ impl<T, const N: usize> core::fmt::Debug for Outputs<T, N> {
 }
 
 impl<T, const N: usize> Outputs<T, N> {
-    pub fn is_open(&self) -> bool {
-        !self.is_closed()
+    pub fn close(&mut self) {
+        let _ = self.tx.take();
     }
 
+    pub fn direction(&self) -> PortDirection {
+        PortDirection::Output
+    }
+
+    pub fn state(&self) -> PortState {
+        if self.tx.as_ref().map(|tx| tx.is_closed()).unwrap_or(true) {
+            PortState::Closed
+        } else {
+            PortState::Open
+        }
+    }
+
+    /// Checks whether this port is currently closed.
     pub fn is_closed(&self) -> bool {
-        self.tx.as_ref().map(|tx| tx.is_closed()).unwrap_or(true)
+        self.state().is_closed()
+    }
+
+    /// Checks whether this port is currently open.
+    pub fn is_open(&self) -> bool {
+        self.state().is_open()
+    }
+
+    /// Checks whether this port is currently connected.
+    pub fn is_connected(&self) -> bool {
+        self.state().is_connected()
     }
 
     pub fn capacity(&self) -> Option<usize> {
@@ -31,10 +54,6 @@ impl<T, const N: usize> Outputs<T, N> {
 
     pub fn max_capacity(&self) -> Option<usize> {
         self.tx.as_ref().map(|tx| tx.max_capacity())
-    }
-
-    pub fn close(&mut self) {
-        let _ = self.tx.take();
     }
 
     pub async fn send(&self, value: T) -> Result<(), SendError> {
@@ -88,12 +107,16 @@ impl<T: Send + 'static, const N: usize> crate::io::OutputPort<T> for Outputs<T, 
 }
 
 impl<T, const N: usize> crate::io::Port<T> for Outputs<T, N> {
-    fn is_closed(&self) -> bool {
-        self.is_closed()
-    }
-
     fn close(&mut self) {
         self.close()
+    }
+
+    fn direction(&self) -> PortDirection {
+        self.direction()
+    }
+
+    fn state(&self) -> PortState {
+        self.state()
     }
 }
 
