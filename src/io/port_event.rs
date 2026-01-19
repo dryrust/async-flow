@@ -11,6 +11,20 @@ pub enum PortEvent<T> {
 }
 
 impl<T> PortEvent<T> {
+    pub fn message(&self) -> Option<&T> {
+        match self {
+            Self::Message(message) => Some(message),
+            _ => None,
+        }
+    }
+
+    pub fn into_message(self) -> Option<T> {
+        match self {
+            Self::Message(message) => Some(message),
+            _ => None,
+        }
+    }
+
     /// Checks whether the event is a connect event.
     pub fn is_connect(&self) -> bool {
         matches!(self, Self::Connect)
@@ -27,11 +41,10 @@ impl<T> PortEvent<T> {
     }
 
     pub fn as_str(&self) -> &str {
-        use PortEvent::*;
         match self {
-            Connect => "connect",
-            Message(_) => "message",
-            Disconnect => "disconnect",
+            Self::Connect => "connect",
+            Self::Message(_) => "message",
+            Self::Disconnect => "disconnect",
         }
     }
 }

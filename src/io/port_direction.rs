@@ -21,10 +21,9 @@ impl PortDirection {
     }
 
     pub fn as_str(&self) -> &str {
-        use PortDirection::*;
         match self {
-            Input => "input",
-            Output => "output",
+            Self::Input => "input",
+            Self::Output => "output",
         }
     }
 }

@@ -1,13 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{PortDirection, PortState, io::SendError};
+use crate::{PortDirection, PortEvent, PortState, io::SendError};
 use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Sender;
 
 #[derive(Clone, Default)]
 pub struct Outputs<T, const N: usize = 0> {
-    pub(crate) tx: Option<Sender<T>>,
+    pub(crate) tx: Option<Sender<PortEvent<T>>>,
 }
 
 impl<T, const N: usize> core::fmt::Debug for Outputs<T, N> {
@@ -56,43 +56,42 @@ impl<T, const N: usize> Outputs<T, N> {
         self.tx.as_ref().map(|tx| tx.max_capacity())
     }
 
-    pub async fn send(&self, value: T) -> Result<(), SendError> {
-        if let Some(tx) = self.tx.as_ref() {
-            Ok(tx.send(value).await?)
-        } else {
-            Err(SendError) // TODO: SendError::Closed
+    pub async fn send(&self, message: T) -> Result<(), SendError> {
+        self.send_event(PortEvent::Message(message)).await
+    }
+
+    pub async fn send_event(&self, event: PortEvent<T>) -> Result<(), SendError> {
+        match self.tx.as_ref() {
+            Some(tx) => Ok(tx.send(event).await?),
+            None => Err(SendError), // TODO: SendError::Closed
         }
     }
 
-    pub fn send_blocking(&self, value: T) -> Result<(), SendError> {
-        if let Some(tx) = self.tx.as_ref() {
-            Ok(tx.blocking_send(value)?)
-        } else {
-            Err(SendError) // TODO: SendError::Closed
-        }
+    pub fn send_blocking(&self, _message: T) -> Result<(), SendError> {
+        todo!() // TODO
     }
 }
 
-impl<T, const N: usize> AsRef<Sender<T>> for Outputs<T, N> {
-    fn as_ref(&self) -> &Sender<T> {
+impl<T, const N: usize> AsRef<Sender<PortEvent<T>>> for Outputs<T, N> {
+    fn as_ref(&self) -> &Sender<PortEvent<T>> {
         self.tx.as_ref().unwrap()
     }
 }
 
-impl<T, const N: usize> AsMut<Sender<T>> for Outputs<T, N> {
-    fn as_mut(&mut self) -> &mut Sender<T> {
+impl<T, const N: usize> AsMut<Sender<PortEvent<T>>> for Outputs<T, N> {
+    fn as_mut(&mut self) -> &mut Sender<PortEvent<T>> {
         self.tx.as_mut().unwrap()
     }
 }
 
-impl<T, const N: usize> From<Sender<T>> for Outputs<T, N> {
-    fn from(input: Sender<T>) -> Self {
+impl<T, const N: usize> From<Sender<PortEvent<T>>> for Outputs<T, N> {
+    fn from(input: Sender<PortEvent<T>>) -> Self {
         Self { tx: Some(input) }
     }
 }
 
-impl<T, const N: usize> From<&Sender<T>> for Outputs<T, N> {
-    fn from(input: &Sender<T>) -> Self {
+impl<T, const N: usize> From<&Sender<PortEvent<T>>> for Outputs<T, N> {
+    fn from(input: &Sender<PortEvent<T>>) -> Self {
         Self {
             tx: Some(input.clone()),
         }
@@ -101,8 +100,8 @@ impl<T, const N: usize> From<&Sender<T>> for Outputs<T, N> {
 
 #[async_trait::async_trait]
 impl<T: Send + 'static, const N: usize> crate::io::OutputPort<T> for Outputs<T, N> {
-    async fn send(&self, value: T) -> Result<(), SendError> {
-        self.send(value).await
+    async fn send(&self, message: T) -> Result<(), SendError> {
+        self.send(message).await
     }
 }
 

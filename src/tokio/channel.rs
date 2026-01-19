@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::{Inputs, Outputs};
-use crate::Connection;
+use crate::{Connection, PortEvent};
 use alloc::boxed::Box;
 use tokio::sync::mpsc;
 
@@ -53,8 +53,10 @@ impl<T, const N: usize> From<(Outputs<T, N>, Inputs<T, N>)> for Channel<T, N> {
     }
 }
 
-impl<T, const N: usize> From<(mpsc::Sender<T>, mpsc::Receiver<T>)> for Channel<T, N> {
-    fn from((tx, rx): (mpsc::Sender<T>, mpsc::Receiver<T>)) -> Self {
+impl<T, const N: usize> From<(mpsc::Sender<PortEvent<T>>, mpsc::Receiver<PortEvent<T>>)>
+    for Channel<T, N>
+{
+    fn from((tx, rx): (mpsc::Sender<PortEvent<T>>, mpsc::Receiver<PortEvent<T>>)) -> Self {
         Self {
             tx: Outputs::<T, N>::from(tx),
             rx: Inputs::<T, N>::from(rx),

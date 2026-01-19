@@ -5,18 +5,15 @@
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum PortState {
+    Open,
+
+    Connected,
+
     #[default]
     Closed,
-    Open,
-    Connected,
 }
 
 impl PortState {
-    /// Checks whether the port state is currently closed.
-    pub fn is_closed(&self) -> bool {
-        *self == Self::Closed
-    }
-
     /// Checks whether the port state is currently open.
     pub fn is_open(&self) -> bool {
         *self == Self::Open
@@ -27,12 +24,16 @@ impl PortState {
         *self == Self::Connected
     }
 
+    /// Checks whether the port state is currently closed.
+    pub fn is_closed(&self) -> bool {
+        *self == Self::Closed
+    }
+
     pub fn as_str(&self) -> &str {
-        use PortState::*;
         match self {
-            Closed => "closed",
-            Open => "open",
-            Connected => "connected",
+            Self::Open => "open",
+            Self::Connected => "connected",
+            Self::Closed => "closed",
         }
     }
 }

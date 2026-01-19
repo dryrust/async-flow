@@ -1,13 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{PortDirection, PortState, io::RecvError};
+use crate::{PortDirection, PortEvent, PortState, io::RecvError};
 use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Receiver;
 
 #[derive(Default)]
 pub struct Inputs<T, const N: usize = 0> {
-    pub(crate) rx: Option<Receiver<T>>,
+    pub(crate) rx: Option<Receiver<PortEvent<T>>>,
 }
 
 impl<T, const N: usize> core::fmt::Debug for Inputs<T, N> {
@@ -65,36 +65,42 @@ impl<T, const N: usize> Inputs<T, N> {
     }
 
     pub async fn recv(&mut self) -> Result<Option<T>, RecvError> {
-        if let Some(rx) = self.rx.as_mut() {
-            Ok(rx.recv().await)
-        } else {
-            Ok(None)
+        loop {
+            return match self.recv_event().await? {
+                Some(PortEvent::Message(m)) => Ok(Some(m)),
+                Some(PortEvent::Connect) => continue, // TODO
+                Some(PortEvent::Disconnect) => Ok(None),
+                None => Ok(None),
+            };
+        }
+    }
+
+    pub async fn recv_event(&mut self) -> Result<Option<PortEvent<T>>, RecvError> {
+        match self.rx.as_mut() {
+            Some(rx) => Ok(rx.recv().await),
+            None => Ok(None),
         }
     }
 
     pub fn recv_blocking(&mut self) -> Result<Option<T>, RecvError> {
-        if let Some(rx) = self.rx.as_mut() {
-            Ok(rx.blocking_recv())
-        } else {
-            Ok(None)
-        }
+        todo!() // TODO
     }
 }
 
-impl<T, const N: usize> AsRef<Receiver<T>> for Inputs<T, N> {
-    fn as_ref(&self) -> &Receiver<T> {
+impl<T, const N: usize> AsRef<Receiver<PortEvent<T>>> for Inputs<T, N> {
+    fn as_ref(&self) -> &Receiver<PortEvent<T>> {
         self.rx.as_ref().unwrap()
     }
 }
 
-impl<T, const N: usize> AsMut<Receiver<T>> for Inputs<T, N> {
-    fn as_mut(&mut self) -> &mut Receiver<T> {
+impl<T, const N: usize> AsMut<Receiver<PortEvent<T>>> for Inputs<T, N> {
+    fn as_mut(&mut self) -> &mut Receiver<PortEvent<T>> {
         self.rx.as_mut().unwrap()
     }
 }
 
-impl<T, const N: usize> From<Receiver<T>> for Inputs<T, N> {
-    fn from(input: Receiver<T>) -> Self {
+impl<T, const N: usize> From<Receiver<PortEvent<T>>> for Inputs<T, N> {
+    fn from(input: Receiver<PortEvent<T>>) -> Self {
         Self { rx: Some(input) }
     }
 }

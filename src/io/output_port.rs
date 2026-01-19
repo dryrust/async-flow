@@ -5,7 +5,7 @@ use alloc::boxed::Box;
 
 #[async_trait::async_trait]
 pub trait OutputPort<T: Send + 'static> {
-    async fn send(&self, value: T) -> Result<(), SendError>;
+    async fn send(&self, message: T) -> Result<(), SendError>;
 
     // TODO: send_event
     // TODO: send_deadline
