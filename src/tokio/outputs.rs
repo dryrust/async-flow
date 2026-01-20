@@ -5,20 +5,55 @@ use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Sender;
 
+#[derive(Clone, Debug, Default)]
+pub enum OutputPortState<T> {
+    #[default]
+    Unconnected,
+    Connected(Sender<PortEvent<T>>),
+    Disconnected,
+    Closed,
+}
+
+impl<T> Into<PortState> for &OutputPortState<T> {
+    fn into(self) -> PortState {
+        use OutputPortState::*;
+        match self {
+            Unconnected => PortState::Unconnected,
+            Connected(tx) => {
+                if tx.is_closed() {
+                    PortState::Disconnected
+                } else {
+                    PortState::Connected
+                }
+            }
+            Disconnected => PortState::Disconnected,
+            Closed => PortState::Closed,
+        }
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct Outputs<T, const N: usize = 0> {
-    pub(crate) tx: Option<Sender<PortEvent<T>>>,
+    pub(crate) state: OutputPortState<T>,
 }
 
 impl<T, const N: usize> core::fmt::Debug for Outputs<T, N> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("Outputs").field("tx", &self.tx).finish()
+        f.debug_struct("Outputs")
+            //.field("state", &self.state) // TODO
+            .finish()
     }
 }
 
 impl<T, const N: usize> Outputs<T, N> {
     pub fn close(&mut self) {
-        let _ = self.tx.take();
+        use OutputPortState::*;
+        match &self.state {
+            Closed => (), // idempotent
+            Unconnected | Connected(_) | Disconnected => {
+                self.state = Closed;
+            }
+        }
     }
 
     pub fn direction(&self) -> PortDirection {
@@ -26,34 +61,23 @@ impl<T, const N: usize> Outputs<T, N> {
     }
 
     pub fn state(&self) -> PortState {
-        if self.tx.as_ref().map(|tx| tx.is_closed()).unwrap_or(true) {
-            PortState::Closed
-        } else {
-            PortState::Open
-        }
-    }
-
-    /// Checks whether this port is currently closed.
-    pub fn is_closed(&self) -> bool {
-        self.state().is_closed()
-    }
-
-    /// Checks whether this port is currently open.
-    pub fn is_open(&self) -> bool {
-        self.state().is_open()
-    }
-
-    /// Checks whether this port is currently connected.
-    pub fn is_connected(&self) -> bool {
-        self.state().is_connected()
+        (&self.state).into()
     }
 
     pub fn capacity(&self) -> Option<usize> {
-        self.tx.as_ref().map(|tx| tx.capacity())
+        use OutputPortState::*;
+        match self.state {
+            Connected(ref tx) => Some(tx.capacity()),
+            _ => None,
+        }
     }
 
     pub fn max_capacity(&self) -> Option<usize> {
-        self.tx.as_ref().map(|tx| tx.max_capacity())
+        use OutputPortState::*;
+        match self.state {
+            Connected(ref tx) => Some(tx.max_capacity()),
+            _ => None,
+        }
     }
 
     pub async fn send(&self, message: T) -> Result<(), SendError> {
@@ -61,9 +85,10 @@ impl<T, const N: usize> Outputs<T, N> {
     }
 
     pub async fn send_event(&self, event: PortEvent<T>) -> Result<(), SendError> {
-        match self.tx.as_ref() {
-            Some(tx) => Ok(tx.send(event).await?),
-            None => Err(SendError), // TODO: SendError::Closed
+        use OutputPortState::*;
+        match self.state {
+            Connected(ref tx) => Ok(tx.send(event).await?),
+            _ => Err(SendError), // TODO: SendError::Closed
         }
     }
 
@@ -74,26 +99,46 @@ impl<T, const N: usize> Outputs<T, N> {
 
 impl<T, const N: usize> AsRef<Sender<PortEvent<T>>> for Outputs<T, N> {
     fn as_ref(&self) -> &Sender<PortEvent<T>> {
-        self.tx.as_ref().unwrap()
+        use OutputPortState::*;
+        match self.state {
+            Connected(ref tx) => tx,
+            _ => unreachable!(),
+        }
     }
 }
 
 impl<T, const N: usize> AsMut<Sender<PortEvent<T>>> for Outputs<T, N> {
     fn as_mut(&mut self) -> &mut Sender<PortEvent<T>> {
-        self.tx.as_mut().unwrap()
+        use OutputPortState::*;
+        match self.state {
+            Connected(ref mut tx) => tx,
+            _ => unreachable!(),
+        }
     }
 }
 
 impl<T, const N: usize> From<Sender<PortEvent<T>>> for Outputs<T, N> {
     fn from(input: Sender<PortEvent<T>>) -> Self {
-        Self { tx: Some(input) }
+        use OutputPortState::*;
+        Self {
+            state: if input.is_closed() {
+                Disconnected
+            } else {
+                Connected(input)
+            },
+        }
     }
 }
 
 impl<T, const N: usize> From<&Sender<PortEvent<T>>> for Outputs<T, N> {
     fn from(input: &Sender<PortEvent<T>>) -> Self {
+        use OutputPortState::*;
         Self {
-            tx: Some(input.clone()),
+            state: if input.is_closed() {
+                Disconnected
+            } else {
+                Connected(input.clone())
+            },
         }
     }
 }

@@ -29,19 +29,24 @@ pub trait Port<T: Send>: MaybeNamed + MaybeLabeled {
         self.direction().is_output()
     }
 
-    /// Checks whether this port is currently closed.
-    fn is_closed(&self) -> bool {
-        self.state().is_closed()
-    }
-
-    /// Checks whether this port is currently open.
-    fn is_open(&self) -> bool {
-        self.state().is_open()
+    /// Checks whether this port is currently unconnected.
+    fn is_unconnected(&self) -> bool {
+        self.state().is_unconnected()
     }
 
     /// Checks whether this port is currently connected.
     fn is_connected(&self) -> bool {
         self.state().is_connected()
+    }
+
+    /// Checks whether this port is currently disconnected.
+    fn is_disconnected(&self) -> bool {
+        self.state().is_disconnected()
+    }
+
+    /// Checks whether this port is currently closed.
+    fn is_closed(&self) -> bool {
+        self.state().is_closed()
     }
 
     /// Returns the remaining buffer capacity of the connection.

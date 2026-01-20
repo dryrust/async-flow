@@ -5,24 +5,75 @@ use alloc::{borrow::Cow, boxed::Box};
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Receiver;
 
+#[derive(Debug, Default)]
+pub enum InputPortState<T> {
+    #[default]
+    Unconnected,
+    Connected(Receiver<PortEvent<T>>),
+    Disconnected(Receiver<PortEvent<T>>),
+    Closed,
+}
+
+impl<T> Into<PortState> for &InputPortState<T> {
+    fn into(self) -> PortState {
+        use InputPortState::*;
+        match self {
+            Unconnected => PortState::Unconnected,
+            Connected(rx) => {
+                if rx.is_closed() {
+                    PortState::Disconnected
+                } else {
+                    PortState::Connected
+                }
+            }
+            Disconnected(_) => PortState::Disconnected,
+            Closed => PortState::Closed,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Inputs<T, const N: usize = 0> {
-    pub(crate) rx: Option<Receiver<PortEvent<T>>>,
+    pub(crate) state: InputPortState<T>,
 }
 
 impl<T, const N: usize> core::fmt::Debug for Inputs<T, N> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("Inputs").field("rx", &self.rx).finish()
+        f.debug_struct("Inputs")
+            //.field("state", &self.state) // TODO
+            .finish()
     }
 }
 
 impl<T, const N: usize> Inputs<T, N> {
     pub fn close(&mut self) {
-        if let Some(rx) = self.rx.as_mut() {
-            if !rx.is_closed() {
-                rx.close() // idempotent
+        use InputPortState::*;
+        match self.state {
+            Unconnected => self.state = Closed,
+            Connected(ref mut rx) => {
+                if !rx.is_closed() {
+                    rx.close()
+                }
+                self.state = Closed;
             }
+            Disconnected(_) => self.state = Closed,
+            Closed => (), // idempotent
         }
+    }
+
+    pub fn disconnect(&mut self) {
+        use InputPortState::*;
+        replace_with::replace_with_or_abort(&mut self.state, |self_| match self_ {
+            Unconnected => Unconnected,
+            Connected(mut rx) => {
+                if !rx.is_closed() {
+                    rx.close()
+                }
+                Disconnected(rx)
+            }
+            Disconnected(rx) => Disconnected(rx),
+            Closed => Closed,
+        })
     }
 
     pub fn direction(&self) -> PortDirection {
@@ -30,38 +81,31 @@ impl<T, const N: usize> Inputs<T, N> {
     }
 
     pub fn state(&self) -> PortState {
-        if self.rx.as_ref().map(|rx| rx.is_closed()).unwrap_or(true) {
-            PortState::Closed
-        } else {
-            PortState::Open
-        }
-    }
-
-    /// Checks whether this port is currently closed.
-    pub fn is_closed(&self) -> bool {
-        self.state().is_closed()
-    }
-
-    /// Checks whether this port is currently open.
-    pub fn is_open(&self) -> bool {
-        self.state().is_open()
-    }
-
-    /// Checks whether this port is currently connected.
-    pub fn is_connected(&self) -> bool {
-        self.state().is_connected()
+        (&self.state).into()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.rx.as_ref().map(|rx| rx.is_empty()).unwrap_or(true)
+        use InputPortState::*;
+        match self.state {
+            Connected(ref rx) | Disconnected(ref rx) => rx.is_empty(),
+            _ => true,
+        }
     }
 
     pub fn capacity(&self) -> Option<usize> {
-        self.rx.as_ref().map(|rx| rx.capacity())
+        use InputPortState::*;
+        match self.state {
+            Connected(ref rx) | Disconnected(ref rx) => Some(rx.capacity()),
+            _ => None,
+        }
     }
 
     pub fn max_capacity(&self) -> Option<usize> {
-        self.rx.as_ref().map(|rx| rx.max_capacity())
+        use InputPortState::*;
+        match self.state {
+            Connected(ref rx) | Disconnected(ref rx) => Some(rx.max_capacity()),
+            _ => None,
+        }
     }
 
     pub async fn recv(&mut self) -> Result<Option<T>, RecvError> {
@@ -76,9 +120,10 @@ impl<T, const N: usize> Inputs<T, N> {
     }
 
     pub async fn recv_event(&mut self) -> Result<Option<PortEvent<T>>, RecvError> {
-        match self.rx.as_mut() {
-            Some(rx) => Ok(rx.recv().await),
-            None => Ok(None),
+        use InputPortState::*;
+        match self.state {
+            Connected(ref mut rx) | Disconnected(ref mut rx) => Ok(rx.recv().await),
+            _ => Ok(None),
         }
     }
 
@@ -89,19 +134,34 @@ impl<T, const N: usize> Inputs<T, N> {
 
 impl<T, const N: usize> AsRef<Receiver<PortEvent<T>>> for Inputs<T, N> {
     fn as_ref(&self) -> &Receiver<PortEvent<T>> {
-        self.rx.as_ref().unwrap()
+        use InputPortState::*;
+        match self.state {
+            Connected(ref rx) | Disconnected(ref rx) => rx,
+            _ => unreachable!(),
+        }
     }
 }
 
 impl<T, const N: usize> AsMut<Receiver<PortEvent<T>>> for Inputs<T, N> {
     fn as_mut(&mut self) -> &mut Receiver<PortEvent<T>> {
-        self.rx.as_mut().unwrap()
+        use InputPortState::*;
+        match self.state {
+            Connected(ref mut rx) | Disconnected(ref mut rx) => rx,
+            _ => unreachable!(),
+        }
     }
 }
 
 impl<T, const N: usize> From<Receiver<PortEvent<T>>> for Inputs<T, N> {
     fn from(input: Receiver<PortEvent<T>>) -> Self {
-        Self { rx: Some(input) }
+        use InputPortState::*;
+        Self {
+            state: if input.is_closed() {
+                Disconnected(input)
+            } else {
+                Connected(input)
+            },
+        }
     }
 }
 

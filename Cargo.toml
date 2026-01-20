@@ -19,7 +19,7 @@ publish = true
 [features]
 default = ["all", "std"]
 all = ["stream", "tokio"]
-std = ["dogma/std", "tokio?/io-std", "tokio?/io-util"]
+std = ["dogma/std", "replace_with/std", "tokio?/io-std", "tokio?/io-util"]
 unstable = []
 
 # Integrations:
@@ -31,6 +31,7 @@ tokio = ["dep:tokio"]
 [dependencies]
 async-trait = { version = "0.1", default-features = false }
 dogma = { version = "0.1", default-features = false, features = ["traits"] }
+replace_with = { version = "0.1", default-features = false }
 thiserror = { version = "2", default-features = false }
 
 # Integrations:
