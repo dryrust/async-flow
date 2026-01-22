@@ -27,3 +27,10 @@ pub enum Error {
     #[error("{0}")]
     Other(#[from] Box<dyn core::error::Error + Send + Sync>),
 }
+
+#[cfg(feature = "serde")]
+impl From<serde_json::Error> for Error {
+    fn from(value: serde_json::Error) -> Self {
+        Error::Other(Box::new(value))
+    }
+}
