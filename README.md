@@ -3,7 +3,8 @@
 [![License](https://img.shields.io/badge/license-Public%20Domain-blue.svg)](https://unlicense.org)
 [![Compatibility](https://img.shields.io/badge/rust-1.85%2B-blue)](https://blog.rust-lang.org/2025/02/20/Rust-1.85.0/)
 [![Package](https://img.shields.io/crates/v/async-flow)](https://crates.io/crates/async-flow)
-[![Documentation](https://docs.rs/async-flow/badge.svg)](https://docs.rs/async-flow)
+[![Documentation](https://img.shields.io/docsrs/async-flow?label=docs.rs)](https://docs.rs/async-flow)
+[![Featured](https://img.shields.io/badge/awesome-fbp-lightgrey)](https://github.com/artob/awesome-fbp)
 
 _"Τὰ πάντα ῥεῖ καὶ οὐδὲν μένει" — Heraclitus_
 
