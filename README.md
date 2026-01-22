@@ -9,10 +9,12 @@ _"Τὰ πάντα ῥεῖ καὶ οὐδὲν μένει" — Heraclitus_
 
 **Async abstractions for [flow-based programming] (FBP) in Rust.**
 This crate can be used to implement dataflow systems consisting of
-interconnected blocks that process arbitrary messages.
+reusable, interconnected blocks that process arbitrary messages.
 
 > [!TIP]
 > 🚧 _We are building in public. This is presently under heavy construction._
+
+<br/>
 
 <sub>
 
@@ -28,11 +30,11 @@ interconnected blocks that process arbitrary messages.
 ## ✨ Features
 
 - Provides primitives for flow-based programming (FBP) based on [Tokio].
-- Constructs dataflow systems by connecting reusable components called blocks.
+- Constructs data flows by connecting reusable components called blocks.
 - Compatible with the inventory of blocks provided by the [Flows.rs] project.
 - Supports opting out of any feature using comprehensive feature flags.
 - Adheres to the Rust API Guidelines in its [naming conventions].
-- No licensing headaches: 100% free and unencumbered public domain software.
+- Cuts red tape: 100% free and unencumbered public domain software.
 
 ## 🛠️ Prerequisites
 
