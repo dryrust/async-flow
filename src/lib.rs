@@ -17,6 +17,8 @@ pub use error::*;
 mod io;
 pub use io::*;
 
+pub mod model;
+
 #[cfg(feature = "flume")]
 pub mod flume;
 #[cfg(all(feature = "flume", not(feature = "tokio")))]

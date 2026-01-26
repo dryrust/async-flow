@@ -1,5 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
+pub use crate::model::PortDirection;
+
 mod connection;
 pub use connection::*;
 
@@ -11,9 +13,6 @@ pub use output_port::*;
 
 mod port;
 pub use port::*;
-
-mod port_direction;
-pub use port_direction::*;
 
 mod port_event;
 pub use port_event::*;

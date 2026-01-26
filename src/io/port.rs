@@ -1,7 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::PortState;
-use crate::PortDirection;
+use super::{PortDirection, PortState};
 use dogma::{MaybeLabeled, MaybeNamed};
 
 /// The common interface for ports, whether for input or output.
