@@ -1,15 +1,17 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::{BlockDefinition, InputId, Inputs, OutputId, Outputs, SystemDefinition};
-use alloc::collections::BTreeSet;
+use alloc::{collections::BTreeSet, rc::Rc};
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Clone, Debug, Error)]
 pub enum SystemBuildError {
     #[error("unregistered input port ID: {0}")]
     UnregisteredInput(InputId),
+
     #[error("unregistered output port ID: {0}")]
     UnregisteredOutput(OutputId),
+
     #[error("already connected output port ID: {0}")]
     AlreadyConnectedOutput(OutputId),
 }
@@ -54,13 +56,19 @@ impl SystemBuilder {
     }
 
     /// Registers an instantiated block with the system under construction.
-    pub fn register<T: BlockDefinition>(&mut self, block: T) -> T {
+    pub fn register<T: BlockDefinition + 'static>(&mut self, block: T) -> Rc<T> {
+        let block: Rc<T> = Rc::new(block);
+        self.system
+            .blocks
+            .push(Rc::clone(&block) as Rc<dyn BlockDefinition>);
+
         for input in block.inputs() {
             self.register_input(input);
         }
         for output in block.outputs() {
             self.register_output(output);
         }
+
         block
     }
 

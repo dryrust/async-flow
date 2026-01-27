@@ -1,12 +1,14 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{InputId, OutputId, SystemBuilder};
-use alloc::collections::BTreeSet;
+use super::{BlockDefinition, InputId, OutputId, SystemBuilder};
+use alloc::{collections::BTreeSet, rc::Rc, vec::Vec};
+use derive_more::Debug;
 
 /// A system definition.
-#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default)]
 pub struct SystemDefinition {
-    //pub(crate) blocks: Vec<BlockDefinition>,
+    #[debug(skip)]
+    pub(crate) blocks: Vec<Rc<dyn BlockDefinition>>,
     pub(crate) connections: BTreeSet<(OutputId, InputId)>,
 }
 
