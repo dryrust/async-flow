@@ -1,19 +1,19 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{BlockDefinition, InputId, Inputs, OutputId, Outputs, SystemDefinition};
+use super::{BlockDefinition, InputPortId, Inputs, OutputPortId, Outputs, SystemDefinition};
 use alloc::{collections::BTreeSet, rc::Rc};
 use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
 pub enum SystemBuildError {
     #[error("unregistered input port ID: {0}")]
-    UnregisteredInput(InputId),
+    UnregisteredInput(InputPortId),
 
     #[error("unregistered output port ID: {0}")]
-    UnregisteredOutput(OutputId),
+    UnregisteredOutput(OutputPortId),
 
     #[error("already connected output port ID: {0}")]
-    AlreadyConnectedOutput(OutputId),
+    AlreadyConnectedOutput(OutputPortId),
 }
 
 /// A builder for system definitions.
@@ -30,9 +30,9 @@ pub enum SystemBuildError {
 #[derive(Clone, Debug, Default)]
 pub struct SystemBuilder {
     system: SystemDefinition,
-    registered_inputs: BTreeSet<InputId>,
-    registered_outputs: BTreeSet<OutputId>,
-    connected_outputs: BTreeSet<OutputId>,
+    registered_inputs: BTreeSet<InputPortId>,
+    registered_outputs: BTreeSet<OutputPortId>,
+    connected_outputs: BTreeSet<OutputPortId>,
 }
 
 impl SystemBuilder {
@@ -57,19 +57,22 @@ impl SystemBuilder {
     }
 
     /// Registers an input port with the system under construction.
-    pub fn register_input(&mut self, input: impl Into<InputId>) {
+    pub fn register_input(&mut self, input: impl Into<InputPortId>) {
         let input = input.into();
         self.registered_inputs.insert(input);
     }
 
     /// Registers an output port with the system under construction.
-    pub fn register_output(&mut self, output: impl Into<OutputId>) {
+    pub fn register_output(&mut self, output: impl Into<OutputPortId>) {
         let output = output.into();
         self.registered_outputs.insert(output);
     }
 
     /// Exports an input port registered with the system under construction.
-    pub fn export_input(&mut self, input: impl Into<InputId>) -> Result<InputId, SystemBuildError> {
+    pub fn export_input(
+        &mut self,
+        input: impl Into<InputPortId>,
+    ) -> Result<InputPortId, SystemBuildError> {
         let input = input.into();
         if !self.registered_inputs.contains(&input) {
             return Err(SystemBuildError::UnregisteredInput(input));
@@ -81,8 +84,8 @@ impl SystemBuilder {
     /// Exports an output port registered with the system under construction.
     pub fn export_output(
         &mut self,
-        output: impl Into<OutputId>,
-    ) -> Result<OutputId, SystemBuildError> {
+        output: impl Into<OutputPortId>,
+    ) -> Result<OutputPortId, SystemBuildError> {
         let output = output.into();
         if !self.registered_outputs.contains(&output) {
             return Err(SystemBuildError::UnregisteredOutput(output));
@@ -110,8 +113,8 @@ impl SystemBuilder {
     /// inserted or already existed.
     pub(crate) fn connect_ids(
         &mut self,
-        output: impl Into<OutputId>,
-        input: impl Into<InputId>,
+        output: impl Into<OutputPortId>,
+        input: impl Into<InputPortId>,
     ) -> Result<bool, SystemBuildError> {
         let output = output.into();
         let input = input.into();

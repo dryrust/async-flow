@@ -1,17 +1,17 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{InputId, OutputId};
+use super::{InputPortId, OutputPortId};
 use alloc::vec::Vec;
 
 pub use dogma::Named as BlockName;
 
 /// A block definition.
 pub trait BlockDefinition: BlockName {
-    fn inputs(&self) -> Vec<InputId> {
+    fn inputs(&self) -> Vec<InputPortId> {
         Vec::new()
     }
 
-    fn outputs(&self) -> Vec<OutputId> {
+    fn outputs(&self) -> Vec<OutputPortId> {
         Vec::new()
     }
 }

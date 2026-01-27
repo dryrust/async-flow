@@ -1,13 +1,12 @@
 // This is free and unencumbered software released into the public domain.
 
+use super::OutputPortId;
 use core::{
     any::type_name,
     marker::PhantomData,
     ops::Bound,
     sync::atomic::{AtomicIsize, Ordering},
 };
-
-pub type OutputId = isize;
 
 /// A one-shot output port of type `T`.
 ///
@@ -18,13 +17,13 @@ pub type Output<T> = Outputs<T, 1, 0>;
 ///
 /// Note that `Outputs` doesn't implement `Copy`, whereas `Inputs` does.
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Outputs<T, const MAX: isize = -1, const MIN: isize = 0>(OutputId, PhantomData<T>);
+pub struct Outputs<T, const MAX: isize = -1, const MIN: isize = 0>(OutputPortId, PhantomData<T>);
 
 impl<T, const MAX: isize, const MIN: isize> Default for Outputs<T, MAX, MIN> {
     fn default() -> Self {
         static COUNTER: AtomicIsize = AtomicIsize::new(1);
         let id = COUNTER.fetch_add(1, Ordering::AcqRel);
-        Self(id, PhantomData)
+        Self(OutputPortId(id), PhantomData)
     }
 }
 
@@ -37,7 +36,7 @@ impl<T, const MAX: isize, const MIN: isize> core::fmt::Debug for Outputs<T, MAX,
 }
 
 impl<T, const MAX: isize, const MIN: isize> Outputs<T, MAX, MIN> {
-    pub fn id(&self) -> OutputId {
+    pub fn id(&self) -> OutputPortId {
         self.0
     }
 
@@ -53,8 +52,8 @@ impl<T, const MAX: isize, const MIN: isize> Outputs<T, MAX, MIN> {
     }
 }
 
-impl<T, const MAX: isize, const MIN: isize> Into<OutputId> for &Outputs<T, MAX, MIN> {
-    fn into(self) -> OutputId {
+impl<T, const MAX: isize, const MIN: isize> Into<OutputPortId> for &Outputs<T, MAX, MIN> {
+    fn into(self) -> OutputPortId {
         self.0
     }
 }

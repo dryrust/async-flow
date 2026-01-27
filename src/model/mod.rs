@@ -12,6 +12,9 @@ pub use outputs::*;
 mod port_direction;
 pub use port_direction::*;
 
+mod port_id;
+pub use port_id::*;
+
 mod system_definition;
 pub use system_definition::*;
 
