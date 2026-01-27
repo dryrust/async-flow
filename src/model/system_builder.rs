@@ -3,7 +3,8 @@
 use super::{
     BlockDefinition, InputPortId, Inputs, OutputPortId, Outputs, PortId, SystemDefinition,
 };
-use alloc::{collections::BTreeSet, rc::Rc};
+use alloc::{collections::BTreeSet, rc::Rc, vec::Vec};
+use core::fmt::Debug;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
@@ -29,7 +30,7 @@ pub enum SystemBuildError {
 /// //let block = builder.register(MyBlock::new());
 /// let system = builder.build();
 /// ```
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct SystemBuilder {
     system: SystemDefinition,
     registered_inputs: BTreeSet<InputPortId>,
@@ -165,5 +166,37 @@ impl SystemBuilder {
     /// Builds the system under construction.
     pub fn build(self) -> SystemDefinition {
         self.system
+    }
+}
+
+impl Debug for SystemBuilder {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("SystemBuilder")
+            .field(
+                "registered_inputs",
+                &self
+                    .registered_inputs
+                    .iter()
+                    .map(|id| id.0)
+                    .collect::<Vec<_>>(),
+            )
+            .field(
+                "registered_outputs",
+                &self
+                    .registered_outputs
+                    .iter()
+                    .map(|id| id.0)
+                    .collect::<Vec<_>>(),
+            )
+            .field(
+                "connected_outputs",
+                &self
+                    .connected_outputs
+                    .iter()
+                    .map(|id| id.0)
+                    .collect::<Vec<_>>(),
+            )
+            .field("system", &self.system)
+            .finish()
     }
 }
