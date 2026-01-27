@@ -1,9 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::{
-    BlockDefinition, InputPortId, Inputs, OutputPortId, Outputs, PortId, SystemDefinition,
+    BlockDefinition, InputPortId, Inputs, OutputPortId, Outputs, PortId, PortIdSet,
+    SystemDefinition,
 };
-use alloc::{collections::BTreeSet, rc::Rc, vec::Vec};
+use alloc::{rc::Rc, vec::Vec};
 use core::fmt::Debug;
 use thiserror::Error;
 
@@ -33,9 +34,9 @@ pub enum SystemBuildError {
 #[derive(Clone, Default)]
 pub struct SystemBuilder {
     system: SystemDefinition,
-    registered_inputs: BTreeSet<InputPortId>,
-    registered_outputs: BTreeSet<OutputPortId>,
-    connected_outputs: BTreeSet<OutputPortId>,
+    registered_inputs: PortIdSet<InputPortId>,
+    registered_outputs: PortIdSet<OutputPortId>,
+    connected_outputs: PortIdSet<OutputPortId>,
 }
 
 impl SystemBuilder {

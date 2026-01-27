@@ -1,16 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{BlockDefinition, InputPortId, OutputPortId, SystemBuilder};
+use super::{BlockDefinition, InputPortId, OutputPortId, PortIdSet, SystemBuilder};
 use alloc::{collections::BTreeSet, rc::Rc, vec::Vec};
-use core::fmt::Debug;
+use core::{fmt::Debug, ops::RangeInclusive};
 
 /// A system definition.
 #[derive(Clone, Default)]
 pub struct SystemDefinition {
-    pub(crate) inputs: BTreeSet<InputPortId>,
-    pub(crate) outputs: BTreeSet<OutputPortId>,
-    pub(crate) blocks: Vec<BlockHandle>,
-    pub(crate) connections: BTreeSet<(OutputPortId, InputPortId)>,
+    pub inputs: PortIdSet<InputPortId>,
+    pub outputs: PortIdSet<OutputPortId>,
+    pub blocks: Vec<BlockHandle>,
+    pub connections: BTreeSet<(OutputPortId, InputPortId)>,
 }
 
 impl SystemDefinition {
@@ -21,6 +21,26 @@ impl SystemDefinition {
 
     pub(crate) fn push_block<T: BlockDefinition + 'static>(&mut self, block: &Rc<T>) {
         self.blocks.push(BlockHandle(Rc::clone(&block) as _));
+    }
+
+    pub fn inputs_range(&self) -> Option<RangeInclusive<InputPortId>> {
+        let Some(&export_min) = self.inputs.first() else {
+            return None;
+        };
+        let Some(&export_max) = self.inputs.last() else {
+            unreachable!()
+        };
+        Some(export_min..=export_max)
+    }
+
+    pub fn outputs_range(&self) -> Option<RangeInclusive<OutputPortId>> {
+        let Some(&export_min) = self.outputs.first() else {
+            return None;
+        };
+        let Some(&export_max) = self.outputs.last() else {
+            unreachable!()
+        };
+        Some(export_min..=export_max)
     }
 }
 
@@ -49,7 +69,31 @@ impl Debug for SystemDefinition {
 }
 
 #[derive(Clone)]
-pub(crate) struct BlockHandle(Rc<dyn BlockDefinition>);
+pub struct BlockHandle(Rc<dyn BlockDefinition>);
+
+impl BlockHandle {
+    pub fn inputs_range(&self) -> Option<RangeInclusive<InputPortId>> {
+        let inputs = self.0.inputs();
+        let Some(&min) = inputs.iter().min() else {
+            return None;
+        };
+        let Some(&max) = inputs.iter().max() else {
+            unreachable!()
+        };
+        Some(min..=max)
+    }
+
+    pub fn outputs_range(&self) -> Option<RangeInclusive<OutputPortId>> {
+        let outputs = self.0.outputs();
+        let Some(&min) = outputs.iter().min() else {
+            return None;
+        };
+        let Some(&max) = outputs.iter().max() else {
+            unreachable!()
+        };
+        Some(min..=max)
+    }
+}
 
 impl Debug for BlockHandle {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
