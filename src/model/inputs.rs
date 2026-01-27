@@ -1,6 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
-use core::{marker::PhantomData, ops::Bound};
+use core::{
+    any::type_name,
+    marker::PhantomData,
+    ops::Bound,
+    sync::atomic::{AtomicIsize, Ordering},
+};
+
+pub type InputId = isize;
 
 /// A one-shot input port of type `T`.
 ///
@@ -10,16 +17,30 @@ pub type Input<T> = Inputs<T, 1, 0>;
 /// An input port of type `T`.
 ///
 /// Note that `Inputs` implements `Copy`, whereas `Outputs` doesn't.
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Inputs<T, const MAX: isize = -1, const MIN: isize = 0>(PhantomData<T>);
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct Inputs<T, const MAX: isize = -1, const MIN: isize = 0>(InputId, PhantomData<T>);
 
 impl<T, const MAX: isize, const MIN: isize> Default for Inputs<T, MAX, MIN> {
     fn default() -> Self {
-        Self(PhantomData)
+        static COUNTER: AtomicIsize = AtomicIsize::new(-1);
+        let id = COUNTER.fetch_sub(1, Ordering::AcqRel);
+        Self(id, PhantomData)
+    }
+}
+
+impl<T, const MAX: isize, const MIN: isize> core::fmt::Debug for Inputs<T, MAX, MIN> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple(&alloc::format!("Inputs<{}>", type_name::<T>()))
+            .field(&self.0)
+            .finish()
     }
 }
 
 impl<T, const MAX: isize, const MIN: isize> Inputs<T, MAX, MIN> {
+    pub fn id(&self) -> InputId {
+        self.0
+    }
+
     /// Returns the cardinality of this connection.
     pub fn cardinality() -> (Bound<usize>, Bound<usize>) {
         assert!(MIN >= 0);
