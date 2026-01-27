@@ -52,3 +52,9 @@ impl<T, const MAX: isize, const MIN: isize> Inputs<T, MAX, MIN> {
         }
     }
 }
+
+impl<T, const MAX: isize, const MIN: isize> Into<InputId> for Inputs<T, MAX, MIN> {
+    fn into(self) -> InputId {
+        self.0
+    }
+}
