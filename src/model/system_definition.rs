@@ -24,11 +24,25 @@ impl SystemDefinition {
     }
 
     pub fn inputs_range(&self) -> Option<RangeInclusive<InputPortId>> {
-        self.inputs.range()
+        let ranges = self
+            .blocks
+            .iter()
+            .filter_map(|block| block.inputs_range())
+            .collect::<Vec<_>>();
+        let min = ranges.iter().map(|r| *r.start()).min()?;
+        let max = ranges.iter().map(|r| *r.end()).max()?;
+        Some(min..=max)
     }
 
     pub fn outputs_range(&self) -> Option<RangeInclusive<OutputPortId>> {
-        self.outputs.range()
+        let ranges = self
+            .blocks
+            .iter()
+            .filter_map(|block| block.outputs_range())
+            .collect::<Vec<_>>();
+        let min = ranges.iter().map(|r| *r.start()).min()?;
+        let max = ranges.iter().map(|r| *r.end()).max()?;
+        Some(min..=max)
     }
 }
 
