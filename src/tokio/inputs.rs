@@ -2,6 +2,7 @@
 
 use crate::{PortDirection, PortEvent, PortState, error::RecvError};
 use alloc::{borrow::Cow, boxed::Box};
+use core::any::TypeId;
 use dogma::{MaybeLabeled, MaybeNamed};
 use tokio::sync::mpsc::Receiver;
 
@@ -41,6 +42,12 @@ impl<T> Into<PortState> for &InputPortState<T> {
 #[derive(Default)]
 pub struct Inputs<T, const N: usize = 0> {
     pub(crate) state: InputPortState<T>,
+}
+
+impl<T: 'static, const N: usize> Inputs<T, N> {
+    pub fn type_id(&self) -> TypeId {
+        TypeId::of::<T>()
+    }
 }
 
 impl<T, const N: usize> core::fmt::Debug for Inputs<T, N> {

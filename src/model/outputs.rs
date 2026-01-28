@@ -19,6 +19,12 @@ pub type Output<T> = Outputs<T, 1, 0>;
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Outputs<T, const MAX: isize = -1, const MIN: isize = 0>(OutputPortId, PhantomData<T>);
 
+impl<T: 'static, const MAX: isize, const MIN: isize> Outputs<T, MAX, MIN> {
+    pub fn type_id(&self) -> TypeId {
+        TypeId::of::<T>()
+    }
+}
+
 impl<T, const MAX: isize, const MIN: isize> Default for Outputs<T, MAX, MIN> {
     fn default() -> Self {
         static COUNTER: AtomicIsize = AtomicIsize::new(1);
@@ -62,7 +68,7 @@ impl<T: 'static, const MAX: isize, const MIN: isize> Into<(OutputPortId, TypeId)
     for &Outputs<T, MAX, MIN>
 {
     fn into(self) -> (OutputPortId, TypeId) {
-        (self.0, TypeId::of::<T>())
+        (self.0, self.type_id())
     }
 }
 
@@ -76,6 +82,6 @@ impl<T: 'static, const MAX: isize, const MIN: isize> Into<(PortId, TypeId)>
     for &Outputs<T, MAX, MIN>
 {
     fn into(self) -> (PortId, TypeId) {
-        (self.0.into(), TypeId::of::<T>())
+        (self.0.into(), self.type_id())
     }
 }

@@ -2,9 +2,14 @@
 
 use crate::error::SendError;
 use alloc::boxed::Box;
+use core::any::TypeId;
 
 #[async_trait::async_trait]
 pub trait OutputPort<T: Send + 'static> {
+    fn type_id(&self) -> TypeId {
+        TypeId::of::<T>()
+    }
+
     async fn send(&self, message: T) -> Result<(), SendError>;
 
     // TODO: send_event

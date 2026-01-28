@@ -75,4 +75,4 @@ impl<T, const N: usize> From<(mpsc::Sender<PortEvent<T>>, mpsc::Receiver<PortEve
     }
 }
 
-impl<T> Connection<T> for Channel<T> {}
+impl<T: 'static> Connection<T> for Channel<T> {}

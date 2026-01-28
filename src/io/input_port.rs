@@ -1,11 +1,15 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{error::RecvError, io::Port};
-use alloc::boxed::Box;
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
+use core::any::TypeId;
 
 #[async_trait::async_trait]
-pub trait InputPort<T: Send>: Port<T> {
+pub trait InputPort<T: Send + 'static>: Port<T> {
+    fn type_id(&self) -> TypeId {
+        TypeId::of::<T>()
+    }
+
     /// Checks if this port is empty.
     fn is_empty(&self) -> bool;
 
