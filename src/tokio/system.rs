@@ -11,13 +11,13 @@ pub struct System {
 }
 
 impl System {
-    pub fn oneshot<T>() -> Channel<T, ONESHOT> {
-        Channel::oneshot()
-    }
+    // pub fn oneshot<T>() -> Channel<T, ONESHOT> {
+    //     Channel::oneshot()
+    // }
 
-    pub fn bounded<T>(buffer: usize) -> Channel<T, UNLIMITED> {
-        Channel::bounded(buffer)
-    }
+    // pub fn bounded<T>(buffer: usize) -> Channel<T, UNLIMITED> {
+    //     Channel::bounded(buffer)
+    // }
 
     /// Builds and executes a system, blocking until completion.
     pub async fn run<F: FnOnce(&mut Self)>(f: F) -> Result {
@@ -71,7 +71,7 @@ impl System {
         T: Send + 'static,
         <T as core::str::FromStr>::Err: Send,
     {
-        let (output, input) = super::Channel::bounded(1).into_inner(); // TODO
+        let (output, input) = super::Channel::<T>::bounded(1).into_inner(); // TODO
         let block = super::stdin(output);
         self.blocks.spawn(block);
         input
@@ -82,7 +82,7 @@ impl System {
     where
         T: Send + 'static,
     {
-        let (output, input) = super::Channel::bounded(1).into_inner(); // TODO
+        let (output, input) = super::Channel::<T>::bounded(1).into_inner(); // TODO
         let block = super::stdout(input);
         self.blocks.spawn(block);
         output

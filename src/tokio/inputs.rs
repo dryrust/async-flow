@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use super::UNLIMITED;
 use crate::{PortDirection, PortEvent, PortState, error::RecvError};
 use alloc::{borrow::Cow, boxed::Box};
 use core::any::TypeId;
@@ -32,7 +33,7 @@ impl<T> Into<PortState> for &InputPortState<T> {
                 } else {
                     PortState::Connected
                 }
-            }
+            },
             Disconnected(_) => PortState::Disconnected,
             Closed => PortState::Closed,
         }
@@ -40,17 +41,17 @@ impl<T> Into<PortState> for &InputPortState<T> {
 }
 
 #[derive(Default)]
-pub struct Inputs<T, const N: usize = 0> {
+pub struct Inputs<T, const N: isize = UNLIMITED> {
     pub(crate) state: InputPortState<T>,
 }
 
-impl<T: 'static, const N: usize> Inputs<T, N> {
+impl<T: 'static, const N: isize> Inputs<T, N> {
     pub fn type_id(&self) -> TypeId {
         TypeId::of::<T>()
     }
 }
 
-impl<T, const N: usize> core::fmt::Debug for Inputs<T, N> {
+impl<T, const N: isize> core::fmt::Debug for Inputs<T, N> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Inputs")
             //.field("state", &self.state) // TODO
@@ -58,7 +59,7 @@ impl<T, const N: usize> core::fmt::Debug for Inputs<T, N> {
     }
 }
 
-impl<T, const N: usize> Inputs<T, N> {
+impl<T, const N: isize> Inputs<T, N> {
     pub fn close(&mut self) {
         use InputPortState::*;
         match self.state {
@@ -68,7 +69,7 @@ impl<T, const N: usize> Inputs<T, N> {
                     rx.close()
                 }
                 self.state = Closed;
-            }
+            },
             Disconnected(_) => self.state = Closed,
             Closed => (), // idempotent
         }
@@ -83,7 +84,7 @@ impl<T, const N: usize> Inputs<T, N> {
                     rx.close()
                 }
                 Disconnected(rx)
-            }
+            },
             Disconnected(rx) => Disconnected(rx),
             Closed => Closed,
         })
@@ -145,7 +146,7 @@ impl<T, const N: usize> Inputs<T, N> {
     }
 }
 
-impl<T, const N: usize> AsRef<Receiver<PortEvent<T>>> for Inputs<T, N> {
+impl<T, const N: isize> AsRef<Receiver<PortEvent<T>>> for Inputs<T, N> {
     fn as_ref(&self) -> &Receiver<PortEvent<T>> {
         use InputPortState::*;
         match self.state {
@@ -155,7 +156,7 @@ impl<T, const N: usize> AsRef<Receiver<PortEvent<T>>> for Inputs<T, N> {
     }
 }
 
-impl<T, const N: usize> AsMut<Receiver<PortEvent<T>>> for Inputs<T, N> {
+impl<T, const N: isize> AsMut<Receiver<PortEvent<T>>> for Inputs<T, N> {
     fn as_mut(&mut self) -> &mut Receiver<PortEvent<T>> {
         use InputPortState::*;
         match self.state {
@@ -165,7 +166,7 @@ impl<T, const N: usize> AsMut<Receiver<PortEvent<T>>> for Inputs<T, N> {
     }
 }
 
-impl<T, const N: usize> From<Receiver<PortEvent<T>>> for Inputs<T, N> {
+impl<T, const N: isize> From<Receiver<PortEvent<T>>> for Inputs<T, N> {
     fn from(input: Receiver<PortEvent<T>>) -> Self {
         use InputPortState::*;
         Self {
@@ -179,7 +180,7 @@ impl<T, const N: usize> From<Receiver<PortEvent<T>>> for Inputs<T, N> {
 }
 
 #[async_trait::async_trait]
-impl<T: Send + 'static, const N: usize> crate::io::InputPort<T> for Inputs<T, N> {
+impl<T: Send + 'static, const N: isize> crate::io::InputPort<T> for Inputs<T, N> {
     fn is_empty(&self) -> bool {
         self.is_empty()
     }
@@ -189,7 +190,7 @@ impl<T: Send + 'static, const N: usize> crate::io::InputPort<T> for Inputs<T, N>
     }
 }
 
-impl<T: Send, const N: usize> crate::io::Port<T> for Inputs<T, N> {
+impl<T: Send, const N: isize> crate::io::Port<T> for Inputs<T, N> {
     fn close(&mut self) {
         self.close()
     }
@@ -203,13 +204,13 @@ impl<T: Send, const N: usize> crate::io::Port<T> for Inputs<T, N> {
     }
 }
 
-impl<T, const N: usize> MaybeNamed for Inputs<T, N> {
+impl<T, const N: isize> MaybeNamed for Inputs<T, N> {
     fn name(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
 
-impl<T, const N: usize> MaybeLabeled for Inputs<T, N> {
+impl<T, const N: isize> MaybeLabeled for Inputs<T, N> {
     fn label(&self) -> Option<Cow<'_, str>> {
         None
     }

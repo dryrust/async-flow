@@ -6,16 +6,16 @@ use alloc::boxed::Box;
 use core::any::TypeId;
 use tokio::sync::mpsc;
 
-pub const UNLIMITED: usize = 0;
-pub const ONESHOT: usize = 1;
+pub const UNLIMITED: isize = -1;
+pub const ONESHOT: isize = 1;
 
-#[derive(Debug)]
-pub struct Channel<T, const N: usize = UNLIMITED> {
+#[derive(Debug, Default)]
+pub struct Channel<T, const N: isize = UNLIMITED> {
     pub tx: Outputs<T, N>,
     pub rx: Inputs<T, N>,
 }
 
-impl<T> Channel<T> {
+impl<T, const N: isize> Channel<T, N> {
     pub fn pair() -> (Channel<T, UNLIMITED>, Channel<T, UNLIMITED>) {
         (Self::bounded(1), Self::bounded(1))
     }
@@ -46,25 +46,25 @@ impl<T> Channel<T> {
     }
 }
 
-impl<T: 'static, const N: usize> Channel<T, N> {
+impl<T: 'static, const N: isize> Channel<T, N> {
     pub fn type_id(&self) -> TypeId {
         TypeId::of::<T>()
     }
 }
 
-impl<T, const N: usize> Channel<T, N> {
+impl<T, const N: isize> Channel<T, N> {
     pub fn into_inner(self) -> (Outputs<T, N>, Inputs<T, N>) {
         (self.tx, self.rx)
     }
 }
 
-impl<T, const N: usize> From<(Outputs<T, N>, Inputs<T, N>)> for Channel<T, N> {
+impl<T, const N: isize> From<(Outputs<T, N>, Inputs<T, N>)> for Channel<T, N> {
     fn from((tx, rx): (Outputs<T, N>, Inputs<T, N>)) -> Self {
         Self { tx, rx }
     }
 }
 
-impl<T, const N: usize> From<(mpsc::Sender<PortEvent<T>>, mpsc::Receiver<PortEvent<T>>)>
+impl<T, const N: isize> From<(mpsc::Sender<PortEvent<T>>, mpsc::Receiver<PortEvent<T>>)>
     for Channel<T, N>
 {
     fn from((tx, rx): (mpsc::Sender<PortEvent<T>>, mpsc::Receiver<PortEvent<T>>)) -> Self {

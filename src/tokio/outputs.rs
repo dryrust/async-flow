@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use super::UNLIMITED;
 use crate::{PortDirection, PortEvent, PortState, error::SendError};
 use alloc::{borrow::Cow, boxed::Box};
 use core::any::TypeId;
@@ -32,7 +33,7 @@ impl<T> Into<PortState> for &OutputPortState<T> {
                 } else {
                     PortState::Connected
                 }
-            }
+            },
             Disconnected => PortState::Disconnected,
             Closed => PortState::Closed,
         }
@@ -40,17 +41,17 @@ impl<T> Into<PortState> for &OutputPortState<T> {
 }
 
 #[derive(Clone, Default)]
-pub struct Outputs<T, const N: usize = 0> {
+pub struct Outputs<T, const N: isize = UNLIMITED> {
     pub(crate) state: OutputPortState<T>,
 }
 
-impl<T: 'static, const N: usize> Outputs<T, N> {
+impl<T: 'static, const N: isize> Outputs<T, N> {
     pub fn type_id(&self) -> TypeId {
         TypeId::of::<T>()
     }
 }
 
-impl<T, const N: usize> core::fmt::Debug for Outputs<T, N> {
+impl<T, const N: isize> core::fmt::Debug for Outputs<T, N> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Outputs")
             //.field("state", &self.state) // TODO
@@ -58,14 +59,14 @@ impl<T, const N: usize> core::fmt::Debug for Outputs<T, N> {
     }
 }
 
-impl<T, const N: usize> Outputs<T, N> {
+impl<T, const N: isize> Outputs<T, N> {
     pub fn close(&mut self) {
         use OutputPortState::*;
         match &self.state {
             Closed => (), // idempotent
             Unconnected | Connected(_) | Disconnected => {
                 self.state = Closed;
-            }
+            },
         }
     }
 
@@ -110,7 +111,7 @@ impl<T, const N: usize> Outputs<T, N> {
     }
 }
 
-impl<T, const N: usize> AsRef<Sender<PortEvent<T>>> for Outputs<T, N> {
+impl<T, const N: isize> AsRef<Sender<PortEvent<T>>> for Outputs<T, N> {
     fn as_ref(&self) -> &Sender<PortEvent<T>> {
         use OutputPortState::*;
         match self.state {
@@ -120,7 +121,7 @@ impl<T, const N: usize> AsRef<Sender<PortEvent<T>>> for Outputs<T, N> {
     }
 }
 
-impl<T, const N: usize> AsMut<Sender<PortEvent<T>>> for Outputs<T, N> {
+impl<T, const N: isize> AsMut<Sender<PortEvent<T>>> for Outputs<T, N> {
     fn as_mut(&mut self) -> &mut Sender<PortEvent<T>> {
         use OutputPortState::*;
         match self.state {
@@ -130,7 +131,7 @@ impl<T, const N: usize> AsMut<Sender<PortEvent<T>>> for Outputs<T, N> {
     }
 }
 
-impl<T, const N: usize> From<Sender<PortEvent<T>>> for Outputs<T, N> {
+impl<T, const N: isize> From<Sender<PortEvent<T>>> for Outputs<T, N> {
     fn from(input: Sender<PortEvent<T>>) -> Self {
         use OutputPortState::*;
         Self {
@@ -143,7 +144,7 @@ impl<T, const N: usize> From<Sender<PortEvent<T>>> for Outputs<T, N> {
     }
 }
 
-impl<T, const N: usize> From<&Sender<PortEvent<T>>> for Outputs<T, N> {
+impl<T, const N: isize> From<&Sender<PortEvent<T>>> for Outputs<T, N> {
     fn from(input: &Sender<PortEvent<T>>) -> Self {
         use OutputPortState::*;
         Self {
@@ -157,13 +158,13 @@ impl<T, const N: usize> From<&Sender<PortEvent<T>>> for Outputs<T, N> {
 }
 
 #[async_trait::async_trait]
-impl<T: Send + 'static, const N: usize> crate::io::OutputPort<T> for Outputs<T, N> {
+impl<T: Send + 'static, const N: isize> crate::io::OutputPort<T> for Outputs<T, N> {
     async fn send(&self, message: T) -> Result<(), SendError> {
         self.send(message).await
     }
 }
 
-impl<T: Send, const N: usize> crate::io::Port<T> for Outputs<T, N> {
+impl<T: Send, const N: isize> crate::io::Port<T> for Outputs<T, N> {
     fn close(&mut self) {
         self.close()
     }
@@ -177,13 +178,13 @@ impl<T: Send, const N: usize> crate::io::Port<T> for Outputs<T, N> {
     }
 }
 
-impl<T, const N: usize> MaybeNamed for Outputs<T, N> {
+impl<T, const N: isize> MaybeNamed for Outputs<T, N> {
     fn name(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
 
-impl<T, const N: usize> MaybeLabeled for Outputs<T, N> {
+impl<T, const N: isize> MaybeLabeled for Outputs<T, N> {
     fn label(&self) -> Option<Cow<'_, str>> {
         None
     }
