@@ -23,7 +23,7 @@ impl SystemDefinition {
         self.blocks.push(BlockHandle(Rc::clone(&block) as _));
     }
 
-    pub fn inputs_range(&self) -> Option<RangeInclusive<InputPortId>> {
+    pub fn inputs_range(&self) -> Option<RangeInclusive<isize>> {
         let ranges = self
             .blocks
             .iter()
@@ -31,10 +31,10 @@ impl SystemDefinition {
             .collect::<Vec<_>>();
         let min = ranges.iter().map(|r| *r.start()).min()?;
         let max = ranges.iter().map(|r| *r.end()).max()?;
-        Some(min..=max)
+        Some(min.into()..=max.into())
     }
 
-    pub fn outputs_range(&self) -> Option<RangeInclusive<OutputPortId>> {
+    pub fn outputs_range(&self) -> Option<RangeInclusive<isize>> {
         let ranges = self
             .blocks
             .iter()
@@ -42,7 +42,7 @@ impl SystemDefinition {
             .collect::<Vec<_>>();
         let min = ranges.iter().map(|r| *r.start()).min()?;
         let max = ranges.iter().map(|r| *r.end()).max()?;
-        Some(min..=max)
+        Some(min.into()..=max.into())
     }
 }
 
@@ -82,7 +82,7 @@ impl Debug for SystemDefinition {
 pub struct BlockHandle(Rc<dyn BlockDefinition>);
 
 impl BlockHandle {
-    pub fn inputs_range(&self) -> Option<RangeInclusive<InputPortId>> {
+    pub fn inputs_range(&self) -> Option<RangeInclusive<isize>> {
         let inputs = self.0.inputs();
         let Some(&min) = inputs.iter().min() else {
             return None;
@@ -90,10 +90,10 @@ impl BlockHandle {
         let Some(&max) = inputs.iter().max() else {
             unreachable!()
         };
-        Some(min..=max)
+        Some(min.into()..=max.into())
     }
 
-    pub fn outputs_range(&self) -> Option<RangeInclusive<OutputPortId>> {
+    pub fn outputs_range(&self) -> Option<RangeInclusive<isize>> {
         let outputs = self.0.outputs();
         let Some(&min) = outputs.iter().min() else {
             return None;
@@ -101,7 +101,7 @@ impl BlockHandle {
         let Some(&max) = outputs.iter().max() else {
             unreachable!()
         };
-        Some(min..=max)
+        Some(min.into()..=max.into())
     }
 }
 

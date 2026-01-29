@@ -7,21 +7,21 @@ use core::{fmt::Debug, ops::RangeInclusive};
 #[derive(Clone)]
 pub struct PortIdSet<K>(BTreeSet<K>)
 where
-    K: AsRef<isize>;
+    K: Into<isize>;
 
-impl<K: AsRef<isize>> Default for PortIdSet<K> {
+impl<K: Into<isize>> Default for PortIdSet<K> {
     fn default() -> Self {
         Self(BTreeSet::default())
     }
 }
 
-impl<K: AsRef<isize> + Copy + Ord> From<&Vec<K>> for PortIdSet<K> {
+impl<K: Into<isize> + Copy + Ord> From<&Vec<K>> for PortIdSet<K> {
     fn from(input: &Vec<K>) -> Self {
         Self(BTreeSet::<K>::from_iter(input.iter().cloned()))
     }
 }
 
-impl<K: AsRef<isize> + Ord> PortIdSet<K> {
+impl<K: Into<isize> + Ord> PortIdSet<K> {
     pub fn new() -> Self {
         Self(BTreeSet::new())
     }
@@ -55,7 +55,7 @@ impl<K: AsRef<isize> + Ord> PortIdSet<K> {
     }
 }
 
-impl<K: AsRef<isize> + Copy + Ord> PortIdSet<K> {
+impl<K: Into<isize> + Copy + Ord> PortIdSet<K> {
     pub fn range(&self) -> Option<RangeInclusive<K>> {
         let Some(&min) = self.first() else {
             return None;
@@ -67,10 +67,16 @@ impl<K: AsRef<isize> + Copy + Ord> PortIdSet<K> {
     }
 }
 
-impl<K: AsRef<isize>> Debug for PortIdSet<K> {
+impl<K: Into<isize> + Copy> Debug for PortIdSet<K> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_list()
-            .entries(&self.0.iter().map(|id| id.as_ref()).collect::<Vec<_>>())
+            .entries(
+                &self
+                    .0
+                    .iter()
+                    .map(|id| Into::<isize>::into(*id))
+                    .collect::<Vec<_>>(),
+            )
             .finish()
     }
 }

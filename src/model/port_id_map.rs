@@ -7,16 +7,16 @@ use core::{fmt::Debug, ops::RangeInclusive};
 #[derive(Clone)]
 pub struct PortIdMap<K, V>(BTreeMap<K, V>)
 where
-    K: AsRef<isize>,
+    K: Into<isize>,
     V: Debug;
 
-impl<K: AsRef<isize>, V: Debug> Default for PortIdMap<K, V> {
+impl<K: Into<isize>, V: Debug> Default for PortIdMap<K, V> {
     fn default() -> Self {
         Self(BTreeMap::default())
     }
 }
 
-impl<K: AsRef<isize> + Ord, V: Debug> PortIdMap<K, V> {
+impl<K: Into<isize> + Ord, V: Debug> PortIdMap<K, V> {
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
@@ -50,22 +50,22 @@ impl<K: AsRef<isize> + Ord, V: Debug> PortIdMap<K, V> {
     }
 }
 
-impl<K: AsRef<isize> + Copy + Ord, V: Debug> PortIdMap<K, V> {
-    pub fn range(&self) -> Option<RangeInclusive<K>> {
+impl<K: Into<isize> + Copy + Ord, V: Debug> PortIdMap<K, V> {
+    pub fn range(&self) -> Option<RangeInclusive<isize>> {
         let Some(&min) = self.first() else {
             return None;
         };
         let Some(&max) = self.last() else {
             unreachable!()
         };
-        Some(min..=max)
+        Some(min.into()..=max.into())
     }
 }
 
-impl<K: AsRef<isize>, V: Debug> Debug for PortIdMap<K, V> {
+impl<K: Into<isize> + Copy, V: Debug> Debug for PortIdMap<K, V> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_map()
-            .entries(self.0.iter().map(|(k, v)| (k.as_ref(), v)))
+            .entries(self.0.iter().map(|(k, v)| (Into::<isize>::into(*k), v)))
             .finish()
     }
 }
